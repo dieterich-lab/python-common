@@ -1,3 +1,11 @@
+
+##############################################################################
+##############################################################################
+#        confighandler NEEEDS TO BE UPDATED FOR PY3. DO NOT USE YET          #
+##############################################################################
+##############################################################################
+
+
 ##############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal
 # of "__author__" in this or any constituent # component or file constitutes a
@@ -11,15 +19,15 @@ __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
 ##############################################################################
 
-from checks import Checks
+from common.checks import Checks
 checks = Checks()
 _slash = checks.directory_deliminator()
 
-from ConfigParser   import SafeConfigParser
-from loghandler     import log
+from configparser   import SafeConfigParser
+from common.loghandler     import log
 
 import ast
-import ConfigParser
+import configparser
 import inspect
 import os
 import re
@@ -335,6 +343,9 @@ class ConfigHandler(object):
         # **kwargs here passes in loghandler parameers from ConfigHandler instantiation
         try:
             self.callobj = inspect.stack()[1][0].f_locals['self']
+            print("self.callobj =", self.callobj ) #3333
+            print("self.callobj.__dict__ =", self.callobj.__dict__ ) #3333
+            
             self.caller_name = sys._current_frames().values()[0]
             self.caller_name = self.caller_name.f_back.f_globals['__file__']            
             self.caller_name = os.path.basename(self.caller_name)
@@ -678,8 +689,8 @@ if __name__ == "__main__":
              )
 #     o = ConfigHandler("/Users/mikes/Documents/Eclipseworkspace/Bioproximity/OpenMS-Python-Luigi/site-packages/Bioproximity/etc/Workflow.conf")
     o = ConfigHandler(None)
-    print o.config_file
-    print o.AWS_ID
+    print(o.config_file)
+    print (o.AWS_ID)
     #===========================================================================
     # o.var1 = 'test'
     # print o.var1

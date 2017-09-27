@@ -20,7 +20,7 @@ AS SUCH, NEITHER CAN BE IMPLEMENTED IN THESE CLASSES WITHOUT WREAKING HAVOC
 """
 # from inspect import stack
 
-from checks import Checks
+from common.checks import Checks
 
 import datetime
 import time
@@ -708,7 +708,7 @@ class SetLogger(object):
         # Strip to only numeric
         value = (''.join(c for c in str(value) if re.match("[0-9]", c)))
         try: value = int(value)
-        except ValueError, e: value = DEFAULT_LOG_LEVEL # default
+        except ValueError as e: value = DEFAULT_LOG_LEVEL # default
         
         if value < MIN_LOG_LEVEL : self._LOG_LEVEL = MIN_LOG_LEVEL
         if value > MAX_LOG_LEVEL : self._LOG_LEVEL = MAX_LOG_LEVEL
@@ -812,7 +812,7 @@ class SetLogger(object):
             else:
                 return False
 
-        except Exception, e:
+        except Exception as e:
             return False
 
     def _migrate_log_data(self,
@@ -883,7 +883,7 @@ class SetLogger(object):
             if not fileExists(dest):
                 raise Exception
 
-        except Exception, e:
+        except Exception as e:
             err = ''.join(["Unable to complete log migration from '",
                            str(source),
                            "' to '",
@@ -913,7 +913,7 @@ class SetLogger(object):
     # === (PRIVATE) ALL _remove METHODS=========================================
 
     def _remove_all_loggers(self):
-        keys = logging.Logger.manager.loggerDict.keys()
+        keys = [logging.Logger.manager.loggerDict.keys()]
         for key in keys:
             self._remove_logger(key)
 

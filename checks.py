@@ -12,7 +12,7 @@ __status__      = "Development"
 ##############################################################################
 
 from math import ceil
-from urlparse import urlparse
+# from urlparse import urlparse
 from os import getcwd
 
 import inspect
@@ -288,7 +288,7 @@ class Checks(object):
             return True
         
         except Exception as e:
-            print e
+            print(e)
             return False
     #         err = ''.join(["checks._makedir: Unable to make directory with '", str(_dir), "' (", e.message, ")."])
     #         raise type(e)(err)
@@ -473,10 +473,10 @@ class Checks(object):
         # Check for both a dir and a file. If neither return False
         
         #=======================================================================
-        # print 'At os.path.exists...'
-        # print "_path =", _path #333
-        # print "_file =", _file #3333
-        # print "_dir = ", _dir #333
+        # print('At os.path.exists...'
+        # print("_path =", _path #333
+        # print("_file =", _file #3333
+        # print("_dir = ", _dir #333
         #=======================================================================
         
         _expanded_path = os.path.expanduser(_path) # Fixes spaces in dir problem
@@ -602,9 +602,9 @@ class Checks(object):
             import Checks
             checks = Checks()
             if checks.checkURI('s3://dev.myserver.com/dir/dir/file.ext'):
-                print 'It is Valid'
+                print('It is Valid'
             else:
-                print 'It is invalid'
+                print('It is invalid'
         """
         if URL is None: 
             if URI is None:
@@ -1077,9 +1077,9 @@ class Checks(object):
         try:
             _list.append("DELETEMELISTCHECKVARIABLE")
             _list.pop(len(_list)-1)
-        except AttributeError, e:
+        except AttributeError as e:
             return False
-        except Exception, e:
+        except Exception as e:
             raise
         return True
     checklist = isList
@@ -1132,15 +1132,15 @@ class Checks(object):
         # If here, all chars are legal. Just check start and finish
         # If full path is required, start with first
         if (full) and (not path.startswith(self._delim)):
-#             print 'checks.isPathFormat:FALSE not startswith', _delim #3333 
+#             print('checks.isPathFormat:FALSE not startswith', _delim #3333 
             return False
         # if relative, must start with dot slash
         if (relative) and (not path.startswith("." + self._delim)):
-#             print 'checks.isPathFormat:FALSE not  . and ', _delim #3333 
+#             print('checks.isPathFormat:FALSE not  . and ', _delim #3333 
             return False
         # If trailing the a trailing delimiter is required
         if (trailing) and (not path.endswith(self._delim)):
-#             print 'checks.isPathFormat:FALSE not endswith', _delim #3333 
+#             print('checks.isPathFormat:FALSE not endswith', _delim #3333 
             return False
         # Otherwise, if here, everything aligns
         return True
@@ -1188,11 +1188,11 @@ if __name__ == "__main__":
     o = Checks()
     s = r"C:\Some\Path\Data\File.txt"
     s = r"./yadda/yadda"
-    print 'linux?:', o.isLinuxPath(s)
-    print 'windows?:',o.isWindowsPath(s)
-    print o.isPathType(s)
+    print('linux?:', o.isLinuxPath(s))
+    print('windows?:',o.isWindowsPath(s))
+    print(o.isPathType(s))
 #     o.isDir(".", create = True, test = False)
-#     print o.checkOS('linux')
+#     print(o.checkOS('linux')
 #===============================================================================
 #     s = ''.join(["This is a test",
 #                  '; sudo - root',
@@ -1204,5 +1204,5 @@ if __name__ == "__main__":
 #                    ';', # ALWAYS PUT ME LAST
 #                    ]) 
 # 
-#     print o.sanitize(s, remove = "[\s]")
+#     print(o.sanitize(s, remove = "[\s]")
 #===============================================================================
