@@ -9,10 +9,11 @@ __email__       = "Michael.Rightmire@uni-heidelberg.de"
 __status__      = "Development"
 
 from common.loghandler import log
+from dateutil.relativedelta import relativedelta as rd
 
 import re
-
-def convert_timestring_input(value, increment):
+    
+def convert_timestring_input(value, increment = 's'):
     _inc = str(increment)
     _value = str(value) 
     
@@ -55,7 +56,7 @@ def convert_timestring_input(value, increment):
             else:        message_from += (str(_num) + " Day, " )
             total_seconds += (_num * 86400) 
             
-        elif _cal.lower().startswith("h"): 
+        elif _cal.startswith("h") or _cal.lower().startswith("ho"): # Hours 
             if _num > 1: message_from += (str(_num) + " Hours, ")
             else:        message_from += (str(_num) + " Hour, " )
             total_seconds += (_num * 3600) 
@@ -69,6 +70,10 @@ def convert_timestring_input(value, increment):
             if _num > 1: message_from += (str(_num) + " Seconds, ")
             else:        message_from += (str(_num) + " Second, " )
             total_seconds += (_num) 
+
+        elif _cal.startswith("H") or _cal.lower().startswith("hu"): # Human
+            err = "Invalid time increment found. 'Human' time increment only valid for output. Valid time increments are Y(ear), M(onth), d(ay), h(our), m(inute), s(econd)"
+            raise ValueError(err)
         
         else:
             err = "Invalid time increment found. Valid time increments are Y(ear), M(onth), D(ay), H(our), M(inute), S(econd)"
@@ -90,7 +95,7 @@ def convert_timestring_input(value, increment):
         if total_time > 1: message_to += (str(total_time) + " Days")
         else:              message_to += (str(total_time) + " Day" )
 
-    elif _inc.lower().startswith("h"): 
+    elif _inc.startswith("h") or _inc.lower().startswith("ho"): # Hours
         total_time = (total_seconds / 3600) 
         if total_time > 1: message_to += (str(total_time) + " Hours")
         else:              message_to += (str(total_time) + " Hour" )
@@ -105,12 +110,21 @@ def convert_timestring_input(value, increment):
         if total_time > 1: message_to += (str(total_time) + " Seconds")
         else:              message_to += (str(total_time) + " Second" )
     
+    elif _inc.startswith("H") or _inc.lower().startswith("hu"): # Human 
+        # Human readable gets a special exception here, since it returns a string and not a number
+        fmt = '{0.days} days {0.hours} hours {0.minutes} minutes {0.seconds} seconds'
+        total_time = fmt.format(rd(seconds=total_seconds))
+        message = ''.join(["Converted to '", total_time, "' from '", message_from[:len(message_from) - 2], "'."])
+#         log.info(message)
+        return total_time 
+
     else:
         err = "Invalid time increment for return value found. Valid time increments are Y(ear), M(onth), D(ay), H(our), M(inute), S(econd)"
         raise ValueError(err)
 
+
     message = ''.join(["Converted to '", message_to, "' from '", message_from[:len(message_from) - 2], "'."])
-    log.info(message)    
+#     log.info(message)    
     
     return round(total_time, 2)
 

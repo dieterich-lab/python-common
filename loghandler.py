@@ -1,4 +1,4 @@
-##############################################################################
+###############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal
 # of "__author__" in this or any constituent # component or file constitutes a
 # violation of the licensing and copyright agreement.
