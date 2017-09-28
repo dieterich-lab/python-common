@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 ##############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal 
 # of "__author__" in this or any constituent # component or file constitutes a 
