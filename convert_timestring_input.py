@@ -15,6 +15,59 @@ from dateutil.relativedelta import relativedelta as rd
 import re
     
 def convert_timestring_input(value, increment = 's'):
+    """
+    :NAME:
+        convert_timestring_input(<str>, [increment = <char>])
+    
+    :DESCRIPTION:
+        Used to parse out a "time string" for script input. 
+    
+    :USAGE:
+        convert_timestring_input("1Y2M3d4h5m6s", increment = 's')
+        
+        Meaning,convert the total time for ...
+        1 Year + 
+        2 Months + 
+        3 Days + 
+        4 Hours + 
+        5 Minutes + 
+        6 Seconds
+        
+        and report the result in total Seconds.  
+        
+    :PARAMETERS:
+        <str> (Mandatory): The time input string of "number+increment". 
+                           I.e. "1d" for 1 Day, or "1d4h" for 1 day and four 
+                           hours.
+                           
+                           Extra characters, punctuation, etc is ignored. 
+                           
+                           Numbers must be integers.
+                           
+        increment (Otional): The time format for the output. I.e.
+                            Y = Years
+                            M (Capital) = Months
+                            D = Days
+                            h (Small) = Hours
+                            m (Small) = Minutes
+                            s = Seconds
+                            H (Capital) = "Human readable"
+                            
+                            
+                            Only one output type can be chosen. It should be
+                            a single character. 
+                            
+    :RETURNS:
+        The length of time as a <float>, rounded to 2 places.
+        
+        NOTE: "H" (Capital) means "Human readable", which is the nly exception
+              to the return type. If "H" is chosen, the return will be a 
+              text string, in the format...
+              
+              >>> print(convert_timestring_input("512345s", "H"))
+              "5.0 days 22.0 hours 19.0 minutes 5.0 seconds"  
+        
+    """
     _inc = str(increment)
     _value = str(value) 
     
@@ -132,4 +185,4 @@ def convert_timestring_input(value, increment = 's'):
 if __name__ == '__main__':
     log.debug("Debugging:", 
               logfile = "system", log_level = 10, screendump = True)
-    print(convert_timestring_input("2d", "sec"))
+    print(convert_timestring_input("512345s", "H"))
