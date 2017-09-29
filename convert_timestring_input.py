@@ -13,6 +13,17 @@ from common.loghandler import log
 from dateutil.relativedelta import relativedelta as rd
 
 import re
+import time
+
+def age(mtime, format = "mtime", negative = False):
+    """"""
+    _f = str(format).lower()
+    _age = time.time() - mtime
+    if negative is False: _age = 0
+    if _f.startswith("mt"): 
+        return _age
+    else:
+        return convert_timestring_input(_age, format)
     
 def convert_timestring_input(value, increment = 's'):
     """
@@ -72,7 +83,7 @@ def convert_timestring_input(value, increment = 's'):
     _value = str(value) 
     
     if re.search("[^0-9A-Za-z\.]", _value):
-        err = "Illegal character found in time string. Only numbers and characters are allowed in the format '1Y2M3d4h5m6s'. Only integers are allowed as numbers. "
+        err = "Illegal character found in time string. Only numbers and characters are allowed in the format '1Y2M3d4h5m6s'. Only integers are allowed as numbers. (value: {V})".format(V = str(_value))
         raise ValueError(err)
     
     _value = ''.join(c for c in str(value) if re.match("[0-9A-Za-z]", c))
