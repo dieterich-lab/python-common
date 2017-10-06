@@ -33,21 +33,25 @@ def findLinks(dir, use = "default"):
         
     """
     if   "default" in str(use).lower(): 
-        yield _findLinks_python(dir)
+        return _findLinks_python(dir)
     
     elif "py" in str(use).lower(): 
-        yield _findLinks_python(dir)
+        return _findLinks_python(dir)
         
     elif "os" in str(use).lower(): 
-        yield _findLinks_os(dir)
+        return _findLinks_os(dir)
 
 def _findLinks_python(dir):
-    """"""    
+    """"""
+    result = []
     for name in os.listdir(dir):
         if name not in (os.curdir, os.pardir):
             full = os.path.join(dir, name)
             if os.path.islink(full):
+#                 result.append((full, os.readlink(full)))
                 yield full, os.readlink(full)
+    
+    return result 
 
 def _findLinks_os(dir):
     if   checks.checkOS('nix'):
