@@ -32,13 +32,13 @@ def findLinks(dir, use = "default"):
         Yields as an iterator tuples of (path, linked_path)
         
     """
-    if   "default" in str.use.lower(): 
+    if   "default" in str(use).lower(): 
         yield _findLinks_python(dir)
     
-    elif "py" in str.use.lower(): 
+    elif "py" in str(use).lower(): 
         yield _findLinks_python(dir)
         
-    elif "os" in str.use.lower(): 
+    elif "os" in str(use).lower(): 
         yield _findLinks_os(dir)
 
 def _findLinks_python(dir):
@@ -55,7 +55,7 @@ def _findLinks_os(dir):
         # remove anything after a ";" for sanity
         _dir = _dir.split(";")[0]
         command = ' '.join(["find", _dir, "-type", "l", "-exec", "ls", "-la", "{}", "\\;"])
-        print(command)
+#         print(command)
         stdoutdata = subprocess.getoutput(command)
 #         print(stdoutdata)
         stdoutdata = stdoutdata.split("\n")
@@ -72,10 +72,11 @@ def _findLinks_os(dir):
     elif checks.checkOS('win'):
         err = "findLinks: Windows is not yet supported."
         raise NotImplementedError(err) 
+   
     else:
         err = "findLinks: OS '{O}' is not yet supported.".format(O = checks.checkOS())
         raise NotImplementedError(err) 
 
 if __name__ == '__main__':
-    for i,j in _findLinks_os("/Users/mikes/Documents/tmp"):
+    for i,j in _findLinks_os("//Users/mikes/Documents/tmp"):
         print (i, ":", j)
