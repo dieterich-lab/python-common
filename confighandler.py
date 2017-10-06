@@ -342,10 +342,35 @@ class ConfigHandler(object):
             return 
         # **kwargs here passes in loghandler parameers from ConfigHandler instantiation
         try:
-            self.callobj = inspect.stack()[1][0].f_locals['self']
+            for i in inspect.stack():
+                print("i:", i)
+            print("self.callobj:", self.callobj)
+            self.callobj = inspect.currentframe().f_back.f_locals['self']
+            stack0 = inspect.stack()[0]
+            print("inspect.getmembers(stack0):", inspect.getmembers(stack0))
+            stack1 = inspect.stack()[1]
+            print("inspect.getmembers(stack1):", inspect.getmembers(stack1))
+#             print('stack[1][0].f_locals["self"]', inspect.stack[1][0].f_locals["self"])
+            sys.exit()
+            
+            
+            
+            print("inspect.currentframe().f_back.f_locals['self']:", inspect.currentframe().f_back.f_locals['self'])            
+#             self.callobj = inspect.currentframe().f_back # Gets teh calling object
+            self.callobj = inspect.currentframe().f_back.f_locals['self']
+            self.callobj_class = inspect.getmembers(self.callobj)[0]
+            print("self.callobj_class=", self.callobj_class) #333
+            print("self.callobj.getmembers()=", inspect.getmembers(self.callobj))
+            print("calling class=", inspect.getmembers(self.callobj).__class__)
+            print("calling __dict__=", inspect.getmembers(self.callobj).__dict__)
+            #self.callobj = inspect.stack()[1][0]
+#             self.callobj = inspect.stack()[1][0].f_locals['self']
             print("self.callobj =", self.callobj ) #3333
             print("self.callobj.__dict__ =", self.callobj.__dict__ ) #3333
-            
+
+            self.caller_name = sys._current_frames().values()
+            for i in self.caller_name: print("i=", i)#333             
+            print("sys._current_frames().values()=", sys._current_frames().values()) #333
             self.caller_name = sys._current_frames().values()[0]
             self.caller_name = self.caller_name.f_back.f_globals['__file__']            
             self.caller_name = os.path.basename(self.caller_name)

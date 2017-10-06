@@ -3,8 +3,8 @@
 
 __author__      = "Mike Rightmire"
 __copyright__   = "Universitäts Klinikum Heidelberg, Section of Bioinformatics and Systems Cardiology"
-__license__     = "Not licensed for private use."
-__version__     = "0.9.0.0"
+__license__     = "Not licensed for third-party use."
+__version__     = "0.9.0.1"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Michael.Rightmire@uni-heidelberg.de"
 __status__      = "Development"
@@ -19,7 +19,7 @@ def age(mtime, format = "mtime", negative = False):
     """"""
     _f = str(format).lower()
     _age = time.time() - mtime
-    if negative is False: _age = 0
+    if (_age < 0) and (negative is False): _age = 0
     if _f.startswith("mt"): 
         return _age
     else:
@@ -196,4 +196,13 @@ def convert_timestring_input(value, increment = 's'):
 if __name__ == '__main__':
     log.debug("Debugging:", 
               logfile = "system", log_level = 10, screendump = True)
-    print(convert_timestring_input("512345s", "H"))
+    mtime = 1506690849.0
+    print(time.time() - mtime)
+    print(age(mtime, "mtime"))
+    
+    
+    
+    
+    
+    
+    
