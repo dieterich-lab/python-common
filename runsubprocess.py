@@ -71,7 +71,6 @@ if __name__ == '__main__':
 #                 "|", "grep", "-i", "'python'", "|", "grep", "-i", "'2.7'"
                 ]
     result = RunSubprocess(command, shell = True)
-    print 'result=', result #3333
 
 
 
