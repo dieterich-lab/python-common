@@ -41,7 +41,7 @@ def findLinks(dir, use = "default"):
     elif "os" in str(use).lower(): 
         return _findLinks_os(dir)
 
-def readLineGroup(file, N = 1, open_as = "a"):
+def readLineGroup(file, N = 1, open_as = "r"):
     """
     :NAME:
         readLineGroup(file, [N = 1])
