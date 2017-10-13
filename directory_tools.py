@@ -72,11 +72,20 @@ def readLineGroup(file, N = 1, open_as = "a"):
         args = [iter(iterable)] * n
         return zip_longest(*args, fillvalue=fillvalue)
             
-#     N = 7 # Number of lines to read 
-    with open(file) as f:
-        for lines in grouper(f, N, ''):
+#     N = 7 # Number of lines to read
+    if isinstance(file, (list, tuple)):
+        for lines in grouper(file, N, ''):
             assert len(lines) == N
             yield lines
+    else:
+        try:
+            with open(file) as f:
+                for lines in grouper(f, N, ''):
+                    assert len(lines) == N
+                    yield lines
+        except Exception as e:
+            err = "readLineGroup: Unknown error opening file '{F}' (ERR: {E})".format(F = str(file), E = str(e))
+            raise RuntimeError(err)
                 
 def _findLinks_python(dir):
     """"""
@@ -121,8 +130,9 @@ def _findLinks_os(dir):
 if __name__ == '__main__':
 #     for i,j in _findLinks_os("//Users/mikes/Documents/tmp"):
 #         print (i, ":", j)
-
-    for l in readLineGroup("/etc/hosts", N = 2):
+#     f = "/etc/hosts"
+    f = ["line1", "line2", "line3", "line4",]
+    for l in readLineGroup(f, N = 2):
         print("===")
         print(l)
         for i in l: print(i)  

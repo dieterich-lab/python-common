@@ -22,32 +22,9 @@ import inspect
 
 class ClassName(object):
     def __init__(self, parser = {}, *args, **kwargs):
-        self._set_config(parser, args, kwargs)
+        self._set_config(parser, args, kwargs) # NEVER REMOVE
         self.main()
                 
-    @property
-    def start_dir(self):
-        try:
-            return self.START_DIR
-        except (AttributeError, KeyError, ValueError) as e:
-            err = "Attribute {A} is not set. ".format(A = str(stack()[0][3]))
-#             log.error() # loghandler disabled until bugfix in Jessie access to self.socket.send(msg)
-            raise ValueError(err)
-        
-    @start_dir.setter
-    def start_dir(self, value):
-        _value = str(value)
-        if not os.path.isdir(_value):
-            err = "The value passed in for attribute {A} ({V}) does not appear to be an existing directory.".format(A = str(stack()[0][3]), V = _value)
-#             log.error(err)# loghandler disabled until bugfix in Jessie access to self.socket.send(msg)
-            raise ValueError(err)
-        else:
-            self.START_DIR = _value
-    
-    @start_dir.deleter
-    def start_dir(self):
-        del self.START_DIR
-
     def _arg_parser(self, parser):
         """
         :NAME:
@@ -118,6 +95,29 @@ class ClassName(object):
         #          )
         #=======================================================================
             
+    @property
+    def start_dir(self):
+        try:
+            return self.START_DIR
+        except (AttributeError, KeyError, ValueError) as e:
+            err = "Attribute {A} is not set. ".format(A = str(stack()[0][3]))
+#             log.error() # loghandler disabled until bugfix in Jessie access to self.socket.send(msg)
+            raise ValueError(err)
+        
+    @start_dir.setter
+    def start_dir(self, value):
+        _value = str(value)
+        if not os.path.isdir(_value):
+            err = "The value passed in for attribute {A} ({V}) does not appear to be an existing directory.".format(A = str(stack()[0][3]), V = _value)
+#             log.error(err)# loghandler disabled until bugfix in Jessie access to self.socket.send(msg)
+            raise ValueError(err)
+        else:
+            self.START_DIR = _value
+    
+    @start_dir.deleter
+    def start_dir(self):
+        del self.START_DIR
+
     def main(self):
         """"""
         # loghandler disabled until bugfix in Jessie access to self.socket.send(msg)
