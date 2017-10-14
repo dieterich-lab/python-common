@@ -15,6 +15,8 @@ _delim = checks.directory_deliminator()
 
 import os
 import subprocess
+import unicodedata
+
 
 def findLinks(dir, use = "default"):
     """
@@ -106,35 +108,63 @@ def _findLinks_os(dir):
         _dir = _dir.split(";")[0]
         command = ' '.join(["find", _dir, "-type", "l", "-exec", "ls", "-la", "{}", "\\;"])
 #         print(command)
-        stdoutdata = subprocess.getoutput(command)
-#         print(stdoutdata)
-        stdoutdata = stdoutdata.split("\n")
-#         print(stdoutdata)
-        for line in stdoutdata:
-#             print(line)
+
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+
+    while True:
+        _stdout = p.stdout.readline()
+        # If no _stdout, we're done...break out of the 'while True:' 
+        if not _stdout: break
+        # Store the output
+        else:
+            # Strip all the weird control chars
+            line = "".join(ch for ch in str(_stdout,'utf-8') if unicodedata.category(ch)[0]!="C")
             line = line.split("/", 1)[1]
-#             print(line)
             line = line.split(" -> ", 1)
-#             print(line)
+            _result = ()
+            if len(line) < 1:
+                print("Find response does not show the original file NOR the linked file. This should never happen. !PLEASE EXAMINE OUTPUT!")
+                line = [None,None]
+            elif len(line) == 1:
+                print("Find response does not show the linked file. !Returning None for linked file.!")
+                line.append(None) 
             yield line[0], line[1]
+
+#===============================================================================
+#         stdoutdata = subprocess.getoutput(command)
+# #         print(stdoutdata)
+#         stdoutdata = stdoutdata.split("\n")
+# #         print(stdoutdata)
+#         for line in stdoutdata:
+# #             print(line)
+#             line = line.split("/", 1)[1]
+# #             print(line)
+#             line = line.split(" -> ", 1)
+# #             print(line)
+#             yield line[0], line[1]
+#     
+#===============================================================================
     
-    
-    elif checks.checkOS('win'):
-        err = "findLinks: Windows is not yet supported."
-        raise NotImplementedError(err) 
-   
-    else:
-        err = "findLinks: OS '{O}' is not yet supported.".format(O = checks.checkOS())
-        raise NotImplementedError(err) 
+   #============================================================================
+   #  elif checks.checkOS('win'):
+   #      err = "findLinks: Windows is not yet supported."
+   #      raise NotImplementedError(err) 
+   # 
+   #  else:
+   #      err = "findLinks: OS '{O}' is not yet supported.".format(O = checks.checkOS())
+   #      raise NotImplementedError(err) 
+   #============================================================================
 
 if __name__ == '__main__':
-#     for i,j in _findLinks_os("//Users/mikes/Documents/tmp"):
-#         print (i, ":", j)
-#     f = "/etc/hosts"
-    f = ["line1", "line2", "line3", "line4",]
-    for l in readLineGroup(f, N = 2):
-        print("===")
-        print(l)
-        for i in l: print(i)  
+    for i,j in _findLinks_os("/mnt/ARCHIVEDISKS/archive_disk_3_contents/"):
+        print (i, ":", j)
+    f = "/etc/hosts"
+    #===========================================================================
+    # f = ["line1", "line2", "line3", "line4",]
+    # for l in readLineGroup(f, N = 2):
+    #     print("===")
+    #     print(l)
+    #     for i in l: print(i)  
+    #===========================================================================
     
     
