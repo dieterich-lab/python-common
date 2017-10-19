@@ -130,30 +130,6 @@ def _findLinks_os(dir):
                 line.append(None) 
             yield line[0], line[1]
 
-#===============================================================================
-#         stdoutdata = subprocess.getoutput(command)
-# #         print(stdoutdata)
-#         stdoutdata = stdoutdata.split("\n")
-# #         print(stdoutdata)
-#         for line in stdoutdata:
-# #             print(line)
-#             line = line.split("/", 1)[1]
-# #             print(line)
-#             line = line.split(" -> ", 1)
-# #             print(line)
-#             yield line[0], line[1]
-#     
-#===============================================================================
-    
-   #============================================================================
-   #  elif checks.checkOS('win'):
-   #      err = "findLinks: Windows is not yet supported."
-   #      raise NotImplementedError(err) 
-   # 
-   #  else:
-   #      err = "findLinks: OS '{O}' is not yet supported.".format(O = checks.checkOS())
-   #      raise NotImplementedError(err) 
-   #============================================================================
 
 if __name__ == '__main__':
     for i,j in _findLinks_os("/mnt/ARCHIVEDISKS/archive_disk_3_contents/"):
