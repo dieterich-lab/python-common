@@ -237,6 +237,7 @@ def _re(p, s, type, *args, **kwargs):
         return list_result
 
 def pause(msg = "Press 'Enter' to continue...", dump = False):
+    import time
     try: 
         t = float(msg) # Is a number or num string
         if dump: print("Sleeping for {T} seconds...".format(T = str(t)))
