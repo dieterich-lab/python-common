@@ -235,6 +235,15 @@ def _re(p, s, type, *args, **kwargs):
 #                 log.warning(msg)
         # Done
         return list_result
+
+def pause(msg = "Press 'Enter' to continue...", dump = False):
+    try: 
+        t = float(msg) # Is a number or num string
+        if dump: print("Sleeping for {T} seconds...".format(T = str(t)))
+        time.sleep(t)
+    
+    except ValueError: # Assumes interactive response
+        input(msg)
  
 class Checks(object):
     def __init__(self):
