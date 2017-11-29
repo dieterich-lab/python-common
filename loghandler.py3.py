@@ -11,7 +11,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.8.0"
+__version__     = "0.9.9.0"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
