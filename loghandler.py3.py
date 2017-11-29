@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal
 # of "__author__" in this or any constituent # component or file constitutes a
@@ -15,6 +18,10 @@ __status__      = "Development"
 ##############################################################################
 
 """
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+link me: loghandler.py -> loghandler.py3.py  !!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 LogHandler IS USED BY BOTH ConfigHandler and ErrorHandler.
 AS SUCH, NEITHER CAN BE IMPLEMENTED IN THESE CLASSES WITHOUT WREAKING HAVOC
 """
