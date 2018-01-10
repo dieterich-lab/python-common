@@ -234,25 +234,21 @@ class ClassName(SuperClassName):
             parser.add_argument('--diffbackuppool', action='store', dest="DIFFBACKUPPOOL", type=str, default = None, help='The generic "Differential" backup pool.')
             parser.add_argument('--incbackuppool', action='store', dest="INCBACKUPPOOL", type=str, default = None, help='The generic "Incremental" backup pool.')
             
-        self.parser = parser
-        self.args   = args
-        self.kwargs = kwargs
-        
         super().__init__(parser, args, kwargs)
 
         # Always set the defaults via the @property
-        self.backup_type = kwargs.get("TYPE",  None) 
-        self.level = kwargs.get("LEVEL",  None) 
-        self.pool = kwargs.get("POOL",  None) 
-        self.client = kwargs.get("CLIENT",  None) 
-        self.schedule = kwargs.get("SCHEDULE",  None) 
-        self.storage = kwargs.get("STORAGE",  None) 
-        self.messages = kwargs.get("MESSAGES",  None) 
-        self.priority = kwargs.get("PRIORITY",  None) 
-        self.bootstrap = kwargs.get("BOOTSTRAP",  None) 
-        self.fullbackuppool = kwargs.get("FULLBACKUPPOOL",  None) 
-        self.diffbackuppool = kwargs.get("DIFFBACKUPPOOL",  None) 
-        self.incbackuppool = kwargs.get("INCBACKUPPOOL",  None) 
+        self.backup_type    = self.get("TYPE",          None) 
+        self.level          = self.get("LEVEL",         None) 
+        self.pool           = self.get("POOL",          None) 
+        self.client         = self.get("CLIENT",        None) 
+        self.schedule       = self.get("SCHEDULE",      None) 
+        self.storage        = self.get("STORAGE",       None) 
+        self.messages       = self.get("MESSAGES",      None) 
+        self.priority       = self.get("PRIORITY",      None) 
+        self.bootstrap      = self.get("BOOTSTRAP",     None) 
+        self.fullbackuppool = self.get("FULLBACKUPPOOL",None) 
+        self.diffbackuppool = self.get("DIFFBACKUPPOOL",None) 
+        self.incbackuppool  = self.get("INCBACKUPPOOL", None) 
         
         self.main()
         
