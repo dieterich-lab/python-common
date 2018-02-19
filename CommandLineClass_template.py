@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 __author__      = "Mike Rightmire"
-__copyright__   = "Universitäts Klinikum Heidelberg, Section of Bioinformatics and Systems Cardiology"
+__copyright__   = "Biocom Software and Biotechnology"
 __license__     = "Not licensed for private use."
 __version__     = "0.9.0.0"
 __maintainer__  = "Mike Rightmire"
-__email__       = "Michael.Rightmire@uni-heidelberg.de"
+__email__       = "Michael.Rightmire@BiocomSoftware.Com"
 __status__      = "Development"
 
 
@@ -33,12 +33,19 @@ class SuperClassName(metaclass=abc.ABCMeta):
         if isinstance(parser, ArgumentParser):
             ### SET ARGPARSE OPTIONS HERE #####################################
             ### ALWAYS SET DEFAULTS THROUGH AN @property ######################
-            parser.add_argument('--someparam', '-P', action="store", dest="SOMEPARAM", type=str, default = None, help='Some initial parameters.')
-            parser.add_argument('--someflag',  '-F', action="store_true", dest="SOMEFLAG", help='Some initial parameters.')
-            parser.add_argument('--logfile', '-L', action="store", dest="LOGFILE", type=str, help='Logfile file name or full path.\nDEFAULT: ./classname.log')
-            parser.add_argument('--log-level', '-l', action="store", dest="LOGLEVEL", type=str, help='Logging level.\nDEFAULT: 10.')
-            parser.add_argument('--screendump', '-S', action="store", dest="SCREENDUMP", type=str,  help='For logging only. If "True" all logging info will also be dumped to the terminal.\nDEFAULT: True.')
-            parser.add_argument('--create-paths', '-C', action="store", dest="CREATEPATHS", type=str, help='For logging only. If "True" will create all paths and files (example create a non-existent logfile.\nDEFAULT: True')
+            # Always set the defaults via the @property.setter ONLY
+            # As an example, 
+            # parser.add_argument('--someparam', action='store_true', dest="someparam", help='Usage instructions (DEFAULT: default_value)')
+            # REMEBER THAT '--someparam', 'dest="someparam" ', and the later 
+            # @property def someparam(self) must all be the same word 'someparam'
+            # and must all be small case!
+            
+            parser.add_argument('--someparam', '-P', action="store", dest="someparam", type=str, default = None, help='Some initial parameters.')
+            parser.add_argument('--someflag',  '-F', action="store_true", dest="someflag", help='Some initial parameters.')
+            parser.add_argument('--logfile', '-L', action="store", dest="logfile", type=str, help='Logfile file name or full path.\nDEFAULT: ./classname.log')
+            parser.add_argument('--loglevel', '-l', action="store", dest="loglevel", type=str, help='Logging level.\nDEFAULT: 10.')
+            parser.add_argument('--screendump', '-S', action="store", dest="screendump", type=str,  help='For logging only. If "True" all logging info will also be dumped to the terminal.\nDEFAULT: True.')
+            parser.add_argument('--createpaths', '-C', action="store", dest="createpaths", type=str, help='For logging only. If "True" will create all paths and files (example create a non-existent logfile.\nDEFAULT: True')
 
             parser_kwargs = parser.parse_args()
             kwargs.update(vars(parser_kwargs))
@@ -59,10 +66,10 @@ class SuperClassName(metaclass=abc.ABCMeta):
         # # if "flag" in args: self.flag = something
         ### ALWAYS SET DEFAULTS IN @property #################################
         # # Logging
-        self.logfile        = kwargs.get("LOGFILE", ''.join(["./", self.app_name, ".log"]))
-        self.log_level      = kwargs.get("LOGLEVEL", 10)
-        self.screendump     = kwargs.get("SCREENDUMP", True)
-        self.create_paths   = kwargs.get("CREATEPATHS", True)
+        self.logfile        = kwargs.get("logfile", ''.join(["./", self.app_name, ".log"]))
+        self.log_level      = kwargs.get("loglevel", 10)
+        self.screendump     = kwargs.get("screendump", True)
+        self.create_paths   = kwargs.get("createpaths", True)
         #=== loghandler bugfix in Jessie access to self.socket.send(msg)
         # Only use actual filesystem file for log for now
         # Log something
@@ -75,8 +82,8 @@ class SuperClassName(metaclass=abc.ABCMeta):
                  )
         # Start params here
             ### ALWAYS SET DEFAULTS THROUGH AN @property ######################
-        self.someparam = kwargs.get("SOMEPARAM", None)
-        self.someflag  = kwargs.get("SOMEFLAG" , None)
+        self.someparam = kwargs.get("someparam", None)
+        self.someflag  = kwargs.get("someflag" , None)
 
             
     @property
@@ -211,13 +218,40 @@ class SuperClassName(metaclass=abc.ABCMeta):
     def create_paths(self):
         del self.SCREENDUMP
     
-    @abstractmethod
+    @abc.abstractmethod
     def main(self):
         """"""
         raise NotImplementedError()
         
 
 class ClassName(SuperClassName):
+    """
+    :NAME:
+        ClassName 
+        
+    :DESCRIPTION:
+        Put the description of what classname does here. I would recommend 
+        leaving the next 6 lines intact for future develpers.  
+        
+        This script can be called as a class using kwargs, such as:
+            DirectorTools(flag1, flag2, someparam = 'value')
+            
+        OR can be called as a class by passing in a list and a dict, such as: 
+            DirectorTools([flag2, flag2], {'someparam' = 'value'})
+            
+        OR it can be called from the command line using switches...
+            python3 DirectorTools.py --flag2, --flag2, --someparam value        
+        
+    :PROPERTIES:
+    
+    :PUBLIC METHODS:
+    
+    :PRIVATE METHODS:
+                                                    
+    :DEVELOPER_NOTES:
+        Put notes here about how the script works, it's flow, and any other 
+        consideration that will help a future developer modify the script. 
+    """    
     def __init__(self, parser = {}, *args, **kwargs):
         # Always set the defaults via the @property
         if isinstance(parser, ArgumentParser):
@@ -237,18 +271,18 @@ class ClassName(SuperClassName):
         super().__init__(parser, args, kwargs)
 
         # Always set the defaults via the @property
-        self.backup_type    = self.get("TYPE",          None) 
-        self.level          = self.get("LEVEL",         None) 
-        self.pool           = self.get("POOL",          None) 
-        self.client         = self.get("CLIENT",        None) 
-        self.schedule       = self.get("SCHEDULE",      None) 
-        self.storage        = self.get("STORAGE",       None) 
-        self.messages       = self.get("MESSAGES",      None) 
-        self.priority       = self.get("PRIORITY",      None) 
-        self.bootstrap      = self.get("BOOTSTRAP",     None) 
-        self.fullbackuppool = self.get("FULLBACKUPPOOL",None) 
-        self.diffbackuppool = self.get("DIFFBACKUPPOOL",None) 
-        self.incbackuppool  = self.get("INCBACKUPPOOL", None) 
+        self.backup_type    = self.kwargs.get("TYPE",          None) 
+        self.level          = self.kwargs.get("LEVEL",         None) 
+        self.pool           = self.kwargs.get("POOL",          None) 
+        self.client         = self.kwargs.get("CLIENT",        None) 
+        self.schedule       = self.kwargs.get("SCHEDULE",      None) 
+        self.storage        = self.kwargs.get("STORAGE",       None) 
+        self.messages       = self.kwargs.get("MESSAGES",      None) 
+        self.priority       = self.kwargs.get("PRIORITY",      None) 
+        self.bootstrap      = self.kwargs.get("BOOTSTRAP",     None) 
+        self.fullbackuppool = self.kwargs.get("FULLBACKUPPOOL",None) 
+        self.diffbackuppool = self.kwargs.get("DIFFBACKUPPOOL",None) 
+        self.incbackuppool  = self.kwargs.get("INCBACKUPPOOL", None) 
         
         self.main()
         
