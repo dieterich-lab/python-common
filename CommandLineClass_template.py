@@ -25,27 +25,51 @@ import inspect
 import ntpath
 import os
 
-class SuperClassName(metaclass=abc.ABCMeta):
+class SuperClassName(metaclass=abc.ABCMeta): # Change from the template name
+    """
+    :NAME:
+        SuperClassName <- Change this from the template name
+        
+    :DESCRIPTION:
+        This is a template abstract class. ALL CHILD CLASSES should use this ABC
+        
+        ALL @properties and argparse for ALL SUBCLASSES should be defined HERE. 
+        
+    :METHODS:
+        Put any abstract or real method descriptions here. 
+        
+    :ATTRIBUTES:
+        Put the names of all attributed defined in this class and 
+        ALL SUBCLEASSES.
+        
+    :RETURNS:
+        What does this class return (if anything)
+        
+    :DEVELOPER_NOTES:
+        Put any noted, warnings or reminders for the developers here. 
+        
+    """
     def __init__(self, parser = {}, *args, **kwargs):
-#         self._set_config(parser, args, kwargs) # NEVER REMOVE
+        """
+        ALL @properties and argparse for ALL SUBCLASSES should be defined HERE. 
+        """
         self.app_name = self.__class__.__name__
-#         self.CONF   = ConfigHandler()# ConfigHandler disabled until py3 update        # Convert parsed args to dict and add to kwargs
         if isinstance(parser, ArgumentParser):
-            ### SET ARGPARSE OPTIONS HERE #####################################
-            ### ALWAYS SET DEFAULTS THROUGH AN @property ######################
+            ### SET ALL ARGPARSE OPTIONS and                  #################
+            ### ALL KWARGS OPTIONS HERE for all child classes #################
+            ### ALWAYS SET DEFAULTS THROUGH THE @property ######################
             # Always set the defaults via the @property.setter ONLY
             # As an example, 
             # parser.add_argument('--someparam', action='store_true', dest="someparam", help='Usage instructions (DEFAULT: default_value)')
             # REMEBER THAT '--someparam', 'dest="someparam" ', and the later 
             # @property def someparam(self) must all be the same word 'someparam'
             # and must all be small case!
-            
-            parser.add_argument('--someparam', '-P', action="store", dest="someparam", type=str, default = None, help='Some initial parameters.')
-            parser.add_argument('--someflag',  '-F', action="store_true", dest="someflag", help='Some initial parameters.')
-            parser.add_argument('--logfile', '-L', action="store", dest="logfile", type=str, help='Logfile file name or full path.\nDEFAULT: ./classname.log')
-            parser.add_argument('--loglevel', '-l', action="store", dest="loglevel", type=str, help='Logging level.\nDEFAULT: 10.')
-            parser.add_argument('--screendump', '-S', action="store", dest="screendump", type=str,  help='For logging only. If "True" all logging info will also be dumped to the terminal.\nDEFAULT: True.')
-            parser.add_argument('--createpaths', '-C', action="store", dest="createpaths", type=str, help='For logging only. If "True" will create all paths and files (example create a non-existent logfile.\nDEFAULT: True')
+            parser.add_argument('--someparam', '-P', action="store",      dest="someparam",   type=str, default = None, help='Some initial parameters.')
+            parser.add_argument('--someflag',  '-F', action="store_true", dest="someflag",                              help='Some initial parameters.')
+            parser.add_argument('--logfile',   '-L', action="store",      dest="logfile",     type=str,                 help='Logfile file name or full path.\nDEFAULT: ./classname.log')
+            parser.add_argument('--loglevel',  '-l', action="store",      dest="loglevel",    type=str,                 help='Logging level.\nDEFAULT: 10.')
+            parser.add_argument('--screendump','-S', action="store",      dest="screendump",  type=str,                 help='For logging only. If "True" all logging info will also be dumped to the terminal.\nDEFAULT: True.')
+            parser.add_argument('--createpaths','-C', action="store",     dest="createpaths", type=str,                 help='For logging only. If "True" will create all paths and files (example create a non-existent logfile.\nDEFAULT: True')
 
             parser_kwargs = parser.parse_args()
             kwargs.update(vars(parser_kwargs))
@@ -80,8 +104,7 @@ class SuperClassName(metaclass=abc.ABCMeta):
                  screendump   = self.screendump, 
                  create_paths = self.create_paths, 
                  )
-        # Start params here
-            ### ALWAYS SET DEFAULTS THROUGH AN @property ######################
+        ### ALWAYS SET DEFAULTS THROUGH AN @property ######################
         self.someparam = kwargs.get("someparam", None)
         self.someflag  = kwargs.get("someflag" , None)
 
