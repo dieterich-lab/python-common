@@ -166,7 +166,8 @@ class log(object):
     """
     @classmethod    
     def _message(self, value):
-        value = str(value)
+        try:value = value.encode().decode()
+        except AttributeError: value = str(value)
         while len(value) > 1024: # limit for some logfiles
             value = value[:len(value) - 1]
         return value
@@ -1066,8 +1067,8 @@ class SetLogger(object):
 if __name__ == '__main__':
     import time
     log.debug(
-              'test', 
-              app_name = 'test', 
+              ' Dateien angefügt', 
+              app_name = "test", 
               log_level = 10, 
               logfile = 'stdout', 
               screendump = False
