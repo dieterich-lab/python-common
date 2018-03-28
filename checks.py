@@ -477,7 +477,7 @@ class Checks(object):
         _path = str(path).strip() # Remove whitespaces
 #         _delim = self.directory_deliminator()
         _result = False # Negative assumption
-        _dir = _check_for_directory_flag(**kwargs)
+        _dir =  _check_for_directory_flag(**kwargs)
         _file = _check_for_file_flag(**kwargs)
         _create = kwargs.pop('create', False)
         #Check if relative, make full if it is. Use the calling files path
@@ -502,9 +502,18 @@ class Checks(object):
         else: # Does not exists, cheack for create
             if _create: # Default False
                 if _dir     : 
-                    if self._makedir(_path): return _path
-                elif _file  : 
-                    if self._makefile(_path): return _path
+                    try:
+                        if self._makedir(_path): return _path
+                    except Exception as e:
+                        err = "Checks.pathExists.create: Unable to create directory '{P}'. (ERR: {E}).".format(P = str(_path), E = str(e))
+                        raise RuntimeError(err)
+                elif _file  :
+                    try: 
+                        if self._makefile(_path): return _path
+                    except Exception as e:
+                        err = "Checks.pathExists.create: Unable to create file '{P}'. (ERR: {E}).".format(P = str(_path), E = str(e))
+                        raise RuntimeError(err)
+                        
                 else        :
                     err = ''.join(["Checks.pathExists.create: ", "The 'create' param muct be accompanied by a 'directory = True' or 'file = True' flag. "])
                     raise ValueError(err)
