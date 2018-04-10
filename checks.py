@@ -297,6 +297,7 @@ class Checks(object):
     #     _dir = _dir + self._delim
         _dir = _dir + self.directory_deliminator()
         try:
+            print("Making dir: '{}'".format(_dir))
             os.makedirs(_dir)
             return True
         
