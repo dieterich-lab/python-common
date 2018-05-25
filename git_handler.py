@@ -51,9 +51,22 @@ class GitHandler():
         # Set parameters. 
         # GIT will be using ssh with a key. This all has to be set up on the server.
         response = ""
-        git_ssh_cmd = 'ssh -i {}'.format(idfile)
-        print("git_ssh_cmd = '{}'".format(git_ssh_cmd))
-        response += "\ngit_ssh_cmd = '{}'".format(git_ssh_cmd)
+        
+        #######################################################################
+        # This is currently set to use https and not ssh. Fpr http to work
+        # The following parameters must be set
+        # git -C /local/dir remote set-url origin https://github.com/dieterich-lab/PROJECT.git
+        # git -C /local/dir config --global push.default simple
+        # git -C /local/dir config credential.helper '!f() { sleep 1; echo "username=<username>\npassword=<password>"; }; f'
+        # <username> and <password> must be replaced with their text values, 
+        # with no quotation marks
+        #######################################################################
+
+        #=======================================================================
+        # git_ssh_cmd = 'ssh -i {}'.format(idfile)
+        # print("git_ssh_cmd = '{}'".format(git_ssh_cmd))
+        # response += "\ngit_ssh_cmd = '{}'".format(git_ssh_cmd)
+        #=======================================================================
         
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         msg = ''.join([now, ":", "Automatically updated by metadata.input_handler."])
@@ -71,12 +84,12 @@ class GitHandler():
             response += "\nRunning 'commit -m {}'".format(msg)        
             repo.git.commit("-m {}".format(msg))
     
-            with Git().custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
-                print("Running 'push'")
-                response += "\nRunning 'push'..."        
-                result = repo.git.push()            
-                print(str(result))
-                response += result
+#             with Git().custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
+            print("Running 'push'")
+            response += "\nRunning 'push'..."        
+            result = repo.git.push()            
+            print(str(result))
+            response += result
     
             feedback_string = ''.join([feedback_string, "<br>", "GIT UPDATE: OK (OUTPUT: {})".format(str(result))])
         
@@ -119,9 +132,22 @@ class GitHandler():
         # Set parameters. 
         # GIT will be using ssh with a key. This all has to be set up on the server.
         response = ""
-        git_ssh_cmd = 'ssh -i {}'.format(idfile)
-        print("git_ssh_cmd = '{}'".format(git_ssh_cmd))
-        response += "\ngit_ssh_cmd = '{}'".format(git_ssh_cmd)
+
+        #######################################################################
+        # This is currently set to use https and not ssh. Fpr http to work
+        # The following parameters must be set
+        # git -C /local/dir remote set-url origin https://github.com/dieterich-lab/PROJECT.git
+        # git -C /local/dir config --global push.default simple
+        # git -C /local/dir config credential.helper '!f() { sleep 1; echo "username=<username>\npassword=<password>"; }; f'
+        # <username> and <password> must be replaced with their text values, 
+        # with no quotation marks
+        #######################################################################
+
+        #=======================================================================
+        # git_ssh_cmd = 'ssh -i {}'.format(idfile)
+        # print("git_ssh_cmd = '{}'".format(git_ssh_cmd))
+        # response += "\ngit_ssh_cmd = '{}'".format(git_ssh_cmd)
+        #=======================================================================
         
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         msg = ''.join([now, ":", "Automatically syncing git repo to local..."])
@@ -131,12 +157,12 @@ class GitHandler():
             print("Setting repo ='{}'".format(str(repo)))
             response += "\nSetting repo ='{}'".format(str(repo))
     
-            with Git().custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
-                print("Running 'pull'")
-                response += "\nRunning 'pull'..."        
-                result = repo.git.pull()            
-                print(str(result))
-                response += result
+#            with Git().custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
+            print("Running 'pull'")
+            response += "\nRunning 'pull'..."        
+            result = repo.git.pull()            
+            print(str(result))
+            response += result
     
             feedback_string = ''.join([feedback_string, "<br>", "GIT UPDATE: OK (OUTPUT: {})".format(str(result))])
         

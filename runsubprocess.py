@@ -5,7 +5,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.1.0"
+__version__     = "0.9.2.0"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
@@ -20,21 +20,73 @@ import unicodedata
 
 def RunSubprocess(command, *args, **kwargs):
     """
-    """
-    verbose = kwargs.pop('verbose',False)
-    if verbose: verbose = True # Ensure is boolean
-    shell   = kwargs.pop('shell', False)
-    if shell: shell = True # Ensure is boolean
-    output  = str(kwargs.pop('output', "str"))
+    :NAME:
+        RunSubprocess(command, [output, verbose, shell, ignore])
+        
+    :DESCRIPTION:
+        RunSubprocess is a more robust wrapper for the Python 
+        subprocess.Popen command, that manages output and sanitization.
+        
+        Output is returned, as well as sentto any existing common.log 
+        singletons. 
+        
+        Sanity of the command is checked, using the common.Checks
+        sanity functions. 
+        
+    :PARAMETERS:
+        command: A list of strings which are assembled into the 
+                 OS-level command to be run. 
+                 See subprocess.Popen for details. 
+                 
+        output : The object type of the output returned. 
+                 Available Options: string (str) or list 
+                 (DEFAULT: string). 
+                
+        verbose: (True/False) If True, each line from stdout is logged.
+                 (DEFAULT: False)
+        
+        shell  : Directly passed to the "shell" parameter in the 
+                 subprocess Popen.
+                 (DEFAULT: False)
+        
+        ignore : (True/False) If True, any warnings or errors (including
+                 a failure to pass the sanitization check) as ignored. 
+                 (DEFAULT: False)
+        
+    :RETURNS:
+        A string or list (see output), containing the stdout from the 
+        Popen command.
     
-    if not checks.checkSanitized(command):
+    :USAGE:
+        from common.runsubprocess import RunSubprocess
+        command = [ "ls", "-la"]
+        result  = RUN(command)
+        print(result)
+        
+        [OUTPUT]
+        results= total 280
+        drwxrwxrwx  12 mikes  staff    384 May 15 16:25 .
+        drwxr-xr-x   4 mikes  staff    128 May 15 16:25 ..
+        -rw-r--r--@  1 mikes  staff   6148 May 15 16:25 .DS_Store
+        -rw-r--r--   1 mikes  staff      0 Mar 14 12:54 __init__.py
+        drwxr-xr-x   7 mikes  staff    224 May 16 15:38 __pycache__
+        -rwxrwxrwx   1 mikes  staff   2469 May 16 15:37 file1.py
+
+    """
+    output  = str(kwargs.get('output', "str"))
+    verbose = True if kwargs.get('verbose', False) else False
+    shell   = True if kwargs.get('shell', False) else False
+    ignore = True if kwargs.get('ignore', False) else False
+
+    if (not ignore) and (not checks.checkSanitized(command)):
         err = ''.join(["RunSubprocess: The command list '", str(command), "' does not pass a sanitization check. !!MAY HAVE DANGEROUS CONTENT!! ABORTING."])
         raise ValueError(err)
 
     result = ""
     
+    if verbose: log.debug("RunSubprocess: " + str(command))
+
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell)
-    log.debug("RunSubprocess: " + str(command))
 
     while True:
         _stdout = p.stdout.readline()

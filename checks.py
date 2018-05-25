@@ -8,7 +8,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.1.4"
+__version__     = "0.9.1.6"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
@@ -31,17 +31,95 @@ global linux_blacklist
 # These are regex strings
 # Think about spaces here
 linux_blacklist = [
-                   ';*\s*sudo\s',
-                   ';*\s*su\s',
-                   ';*\s*bash'
-                   ';*\s*rm -{0,1}[RrFf]*', # remove
-                   ';*\s*chmod\s*', # Permissions
-                   ';*\s*chown\s*', # Ownership
-                   ';', # ALWAYS PUT ME LAST 
+                   'sudo',
+                   'su',
+                   'bash',
+                   'rm -{0,1}[RrFf]*', # remove
+                   'chmod', # Permissions
+                   'chown', # Ownership
+                   'kill',
+                    'rm', 
+                    'mkfs', 
+                    'dd', 
+                    'fork', 
+                    'while', 
+                    'tar', 
+                    'wget', 
+                    'sh', 
+                    '?sh', 
+                    'python',
+                    'perl',
+                    'chmod', 
+                    'chown', 
+                    '__attribute__', 
+                    ';', # ALWAYS PUT ME LAST 
                    ]
 
 global windows_blacklist
 windows_blacklist = []
+
+def _dir_delim():
+    """
+    Just a pointer to directory_deliminator()
+    """
+    if _checkOS("windows"): 
+        return "\\"
+    else: 
+        return "/"
+                  
+
+def _makefile(path):
+    """"""
+    _path = str(path)
+    # Set starter error message
+    err = "checks._makefile:"
+#     err = ''.join(["checks._makefile: '_path' of ", str(_path), " "]) 
+    # Check if it looks liek a file
+    if len(_path) < 1 or _path.endswith(_dir_delim()) :
+        return False
+    
+    _dir = ntpath.dirname(_path) + _dir_delim()
+    _file = ntpath.basename(_path)
+    
+#         err = ''.join([err, "Does not appear to be a valid full path with filename. "])
+#         raise ValueError(err)
+
+    # Try to make just the directory (and then try to make the file next)
+    try:
+        _makedir(_dir)
+
+    except Exception as e:
+        if 'exists': pass # If it exists, all is good. 
+        else:
+            # Failed to make. Return false
+#             return False
+            err = "{M}. Unable to create directory (ERR: '{E}', path:'{P}')".format(M = err, E = str(e), P = _path)
+#             err = ''.join([err, "Was unable to create directory. ","(", e.message, ")."])
+            raise type(e)(err)
+    # Make the file itself.     
+    try:
+        open(_path, 'w+') # Use path not _dir or _file
+        return True
+    
+    except Exception as e:
+#         return False
+        err = "{M}. Unable to create file (ERR: '{E}', path:'{P}')".format(M = err, E = str(e), P = _path)
+#         err = ''.join([err, "Was unable to create file. ","(", e.message, ")."])
+        raise type(e)(err)
+
+def _makedir(_path):
+    """"""
+    _dir = ntpath.dirname(_path)
+#     _dir = _dir + self._delim
+    _dir = _dir + self.directory_deliminator()
+    try:
+        print("Making dir: '{}'".format(_dir))
+        os.makedirs(_dir)
+        return True
+    
+    except Exception as e:
+        print(e)
+        return False
 
 
 def _check_for_directory_flag(**kwargs):
@@ -61,70 +139,266 @@ def _check_for_file_flag(**kwargs):
     else:
         return False
         
-def _checkSanitized(s, blacklist): # Blackist must be passed in 
-    # Check blacklist is list
-    if not isinstance(blacklist, list):
-        e = ''.join([ 'checks._checkSanitized:', "Parameter 'blacklist' must be a list, not '", str(type(blacklist)), "'. " ])
-        raise AttributeError(e)
+#===============================================================================
+# def _checkSanitized(s, blacklist): # Blackist must be passed in 
+#     # Check blacklist is list
+#     if not isinstance(blacklist, list):
+#         e = ''.join([ 'checks._checkSanitized:', "Parameter 'blacklist' must be a list, not '", str(type(blacklist)), "'. " ])
+#         raise AttributeError(e)
+#         
+#     for word in blacklist:
+#         word = str(word) # In case blacklist is passed in 
+#         if re.search(word,s): return False
+#     
+#     return True    
+#===============================================================================
+    
+#===============================================================================
+# def _checkLinuxSanitized(s, blacklist = None):
+#     """"""
+#     if re.search('[;]', s): return False # ';' common command insertion
+#     # Blacklist specific to linux        
+#     if blacklist is None:
+#         """
+#         NOTE: THE POSITIONS OF THE SPACES IS CRITICAL HERE.
+#         Commands are only commands if spaces before and/or after
+#         Think about spaces here
+#         """
+#         # Think about spaces here
+#         blacklist = linux_blacklist
+# #         blacklist = [
+# #                        ' rm ', # remove
+# #                        ' -[RrFf]*', # dangerous flags. Note spaces.
+# #                        ' chmod ', # Permissions
+# #                        ' chown ', # Ownership
+# #                        ]
+#     return _checkSanitized(s, blacklist)
+#===============================================================================
+    
+#===============================================================================
+# def _checkOSXSanitized(s, blacklist = None):
+#     ### osx specific checks here ###
+#     return _checkLinuxSanitized(s, blacklist)
+#===============================================================================
+
+#===============================================================================
+# def _checkWindowsSanitized(s, blacklist = None):
+#     raise NotImplementedError()
+#===============================================================================
+def _checkOS(os = None):
+    """
+    checkOS(['os'])
+    
+    DESCRIPTION
+        checkOS returns either the OS platform (if called with no option), 
+        or a True/False if the passed option matches the OS type.
         
+    OPTIONS
+        os = a STRING containing the name of the os to be identified. If the 
+             platform matches the 'os', checkOS will return True, 
+             otherwise it returns False.
+             
+            Acceptable 'os' parameters are:
+                windows = T if windows OS
+                win     = T if windows OS
+                win32   = T if windows 32 bit specifically
+                win64   = T if windows 64 bit specifically
+                freebsd = T if FreeBSD specifically
+                gnu     = T if GNU OS specifically
+                linux   = T if linux, or GNU, or FreeBAD
+                unix    = T if Solaris, or riscos, or FreeBSD
+                *nix    = T if linux, or GNU, or FreeBAD, or Solaris, 
+                          or riscos, or FreeBSD
+                risc    = T is riscos
+                atheos  = T is atheos
+                solaris = T if solaris, or sunos
+    """
+    def _windows_os():
+        if sys.platform.startswith('win'): return True
+        else: return False
+
+    def _windows32_os():
+        if str(sys.platform) == "win32":  return True
+        return False
+
+    def _windows64_os():
+        if str(sys.platform) == "win64": return True
+        return False
+    
+    def _linux_os():
+        if sys.platform.startswith('linux'): return True
+        if _gnu_os(): return True
+        if _freebsd_os(): return True
+#             if _osx_os(): return True
+        return False
+        
+    def _osx_os():
+        if sys.platform.startswith('darwin'): return True
+        else: return False                
+    
+    def _cygwin_os():
+        if sys.platform.startswith('cygwin'): return True
+        else: return False
+        
+    def _os2_os():
+        if sys.platform.startswith('os2'): return True
+        else: return False
+        
+    def _os2emx_os():
+        if sys.platform.startswith('os2emx'): return True
+        else: return False
+        
+    def _riscos_os():
+        if sys.platform.startswith('riscos'): return True
+        else: return False
+        
+    def _atheos_os():
+        if sys.platform.startswith('atheos'): return True
+        else: return False                
+
+    def _sun_os():
+        if sys.platform.startswith('sunos'): return True
+        else: return False
+                
+    def _freebsd_os():
+        if sys.platform.startswith('freebsd'): return True
+        else: return False
+
+    def _gnu_os():
+        if sys.platform.startswith('gnu'): return True
+        else: return False
+
+    def _unix_os():
+        if _freebsd_os(): return True
+        if _sun_os(): return True
+        if _riscos_os():  return True
+        return False
+
+    def _nix_os():
+        if _freebsd_os(): return True
+        if _sun_os(): return True
+        if _riscos_os(): return True
+        if _linux_os(): return True
+        if _gnu_os(): return True
+        if _osx_os(): return True
+        if _cygwin_os(): return True
+        return False
+                                                                    
+    def _unknown_os():
+        return sys.platform    
+
+    _os = str(os).lower()
+    
+    if os is None: return sys.platform
+    if sys.platform == _os: return True
+            
+    return {
+            "win"       :_windows_os,
+            "w"         :_windows_os,
+            "windows"   :_windows_os,
+
+            "win32"     :_windows32_os,
+            "w32"       :_windows32_os,
+            "x32"       :_windows32_os,
+
+            "windows32" :_windows32_os,
+            "win64"     :_windows64_os,
+            "w64"       :_windows64_os,
+            "x64"       :_windows64_os,
+            "ia64"      :_windows64_os,
+            "windows64" :_windows64_os,
+             
+            "g"         :_gnu_os, 
+            "gnu"       :_gnu_os,
+
+            "lin"       :_linux_os, 
+            "l"         :_linux_os,
+            "linux"     :_linux_os,
+            "linux2"    :_linux_os,
+            
+            "freebsd"   :_freebsd_os,
+            "free"      :_freebsd_os,
+            "bsd"       :_freebsd_os,
+            
+            "mac"       :_osx_os,
+            "osx"       :_osx_os,
+            "darwin"    :_osx_os,
+            "dar"       :_osx_os,
+            "apple"     :_osx_os, 
+            
+            "cygwin"    :_cygwin_os,
+            "cyg"       :_cygwin_os,
+            "c"         :_cygwin_os,
+                      
+            "os2emx"    :_os2emx_os,
+            "emx"       :_os2emx_os,
+                
+            "os2"       :_os2_os,
+                
+            "risc"      :_riscos_os,
+            "riscos"    :_riscos_os,
+                
+            "atheos"    :_atheos_os,
+            "athe"      :_atheos_os,
+            "ath"       :_atheos_os,        
+                    
+            "solaris"   :_sun_os,
+            'sol'       :_sun_os,
+            'sun'       :_sun_os,
+                    
+            'unix'      :_unix_os,
+            'nix'       :_nix_os,
+            '*nix'      :_nix_os,
+            
+            }.get(_os)()
+    # Nothing matched. error basically
+#         return False
+    err = ''.join([self.__class__.__name__, ".", inspect.stack()[0][3], ": ", 
+                   "Unable o successfully match an OS. Erroring out instead of passing a False back. "])
+    raise OSError(err)
+
+def _sanitize(value, blacklist):
+    """
+    :RETURN: 
+    returns a tuple (True/False, String)
+    
+    :PARAMETERS:
+    value = the string to be checked. If not sent as a string, will be converted
+            to a string. 
+            
+    blacklist = The list of words that are invalid (should not be included in
+                the string. 
+                
+    remove = If True, return the string with the blacklisted words removed. 
+             If False, returns the original string.
+             
+    system = The type of OS to be checked. Only useful if no blacklist was 
+             submitted. If set, AND NO BLACKLIST, the default blacklist for that 
+             OS will be used.  
+    """
+    if not isinstance(blacklist, (list,tuple)):
+        e = "checks._sanitize: Parameter 'blacklist' must be a list, not '{T}' (blacklist = '{B}'). ".format( T = str(type(blacklist)), B = str(blacklist))
+        raise AttributeError(e)
+
+    result = value
     for word in blacklist:
-        word = str(word) # In case blacklist is passed in 
-        if re.search(word,s): return False
-    
-    return True    
-    
-def _checkLinuxSanitized(s, blacklist = None):
-    """"""
-    if re.search('[;]', s): return False # ';' common command insertion
-    # Blacklist specific to linux        
-    if blacklist is None:
-        """
-        NOTE: THE POSITIONS OF THE SPACES IS CRITICAL HERE.
-        Commands are only commands if spaces before and/or after
-        Think about spaces here
-        """
-        # Think about spaces here
-        blacklist = linux_blacklist
-#         blacklist = [
-#                        ' rm ', # remove
-#                        ' -[RrFf]*', # dangerous flags. Note spaces.
-#                        ' chmod ', # Permissions
-#                        ' chown ', # Ownership
-#                        ]
-    return _checkSanitized(s, blacklist)
-    
-def _checkOSXSanitized(s, blacklist = None):
-    ### osx specific checks here ###
-    return _checkLinuxSanitized(s, blacklist)
-
-def _checkWindowsSanitized(s, blacklist = None):
-    raise NotImplementedError()
-
-def _sanitize(s, blacklist = None, remove = None):
-    if not isinstance(blacklist, list):
-        e = ''.join([ 'checks._sanitize:', "Parameter 'blacklist' must be a list, not '", str(type(blacklist)), "'. " ])
-        raise AttributeError(e)
-
-    result = str(s)
-    for pattern in blacklist:
+        pattern = ';*\s*{}'.format(str(word))
         result = re.sub(pattern, '', result)
-    
-    if remove:
-        result = ''.join(c for c in result if not re.match(remove, c) )
-        
-    return result
 
-def _linux_sanitize(s, blacklist = None, remove = None):
+    if result == value: return (True, result)
+    else: return (False, result)
+
+def _linux_sanitize(value, blacklist = None):
     if blacklist is None: blacklist = linux_blacklist
-    return _sanitize(s, blacklist, remove)
+    return _sanitize(value, blacklist)
 
-def _windows_sanitize(s, blacklist):
+def _windows_sanitize(value, blacklist = None):
     err = ''.join("'Checks.sanitize()' is not yet implemented for a Windows environment. ")
     raise NotImplementedError(err)
 
-def _OSX_sanitize(s, blacklist):
+def _OSX_sanitize(value, blacklist = None):
     if blacklist is None: blacklist = linux_blacklist
-    return _sanitize(s, blacklist, remove)
+    return _sanitize(value, blacklist)
 
 def _errout(msg, errtype = None):
     if 'exception' in str(errtype).lower():
@@ -252,74 +526,17 @@ class Checks(object):
         self._calling_file = str(inspect.getfile(sys._getframe(1)))
         self._delim = self.directory_deliminator()
         
-    def _makefile(self, path):
-        """"""
-        _path = str(path)
-        # Set starter error message
-        err = ''.join(["checks._makefile: '_path' of ", str(_path), " "]) 
-        # Check if it looks liek a file
-        if len(_path) < 1 or _path.endswith(self.directory_deliminator()) :
-            return False
-        
-        _dir = ntpath.dirname(_path) + self.directory_deliminator()
-        _file = ntpath.basename(_path)
-        
-    #         err = ''.join([err, "Does not appear to be a valid full path with filename. "])
-    #         raise ValueError(err)
-    
-        # Try to make just the directory (and then try to make the file next)
-        try:
-            _makedir(_dir)
-    
-        except Exception as e:
-            if 'exists':
-                pass # If it exists, all is good. 
-            
-    
-            else:
-                # Failed to make. Return false
-    #             return False
-                err = ''.join([err, "Was unable to create directory. ","(", e.message, ")."])
-                raise type(e)(err)
-        # Make the file itself.     
-        try:
-            open(_path, 'w+') # Use path not _dir or _file
-            return True
-        
-        except Exception as e:
-    #         return False
-            err = ''.join([err, "Was unable to create file. ","(", e.message, ")."])
-            raise type(e)(err)
-    
-    def _makedir(self, _path):
-        """"""
-        _dir = ntpath.dirname(_path)
-    #     _dir = _dir + self._delim
-        _dir = _dir + self.directory_deliminator()
-        try:
-            print("Making dir: '{}'".format(_dir))
-            os.makedirs(_dir)
-            return True
-        
-        except Exception as e:
-            print(e)
-            return False
-    #         err = ''.join(["checks._makedir: Unable to make directory with '", str(_dir), "' (", e.message, ")."])
-    #         raise type(e)(err)
-
     def directory_delimiter(self):
         """
         Just a pointer to directory_deliminator()
         """
-        return self.directory_deliminator()
+        return _dir_delim()
                       
     def directory_deliminator(self):
-        # Check system type and set directory deliminator
-        if self.checkOS("windows"): 
-            return "\\"
-        else: 
-            return "/"
-    directory_delimiter = directory_deliminator
+        """
+        Just a pointer to directory_deliminator()
+        """
+        return _dir_delim()
                       
     def obfuscate_key(self, _key):
         _key = str(_key)
@@ -504,13 +721,13 @@ class Checks(object):
             if _create: # Default False
                 if _dir     : 
                     try:
-                        if self._makedir(_path): return _path
+                        if _makedir(_path): return _path
                     except Exception as e:
                         err = "Checks.pathExists.create: Unable to create directory '{P}'. (ERR: {E}).".format(P = str(_path), E = str(e))
                         raise RuntimeError(err)
                 elif _file  :
                     try: 
-                        if self._makefile(_path): return _path
+                        if _makefile(_path): return _path
                     except Exception as e:
                         err = "Checks.pathExists.create: Unable to create file '{P}'. (ERR: {E}).".format(P = str(_path), E = str(e))
                         raise RuntimeError(err)
@@ -559,7 +776,7 @@ class Checks(object):
         """
         _file = str(file)
         if _fileExists(_file):            return True
-        elif kwargs.pop('create', False): return self._makefile(_file) 
+        elif kwargs.pop('create', False): return _makefile(_file) 
         else:                             return False
     isFile = fileExists
 
@@ -583,7 +800,7 @@ class Checks(object):
         """
         _directory = str(directory)
         if _dirExists(_directory):            return True
-        elif kwargs.pop('create', False): return self._makedir(_directory) 
+        elif kwargs.pop('create', False): return _makedir(_directory) 
         else:                             return False
     isdirectory = isDir = directoryExists
 
@@ -726,154 +943,12 @@ class Checks(object):
                     atheos  = T is atheos
                     solaris = T if solaris, or sunos
         """
-        def _windows_os():
-            if sys.platform.startswith('win'): return True
-            else: return False
-
-        def _windows32_os():
-            if str(sys.platform) == "win32":  return True
-            return False
-
-        def _windows64_os():
-            if str(sys.platform) == "win64": return True
-            return False
-        
-        def _linux_os():
-            if sys.platform.startswith('linux'): return True
-            if _gnu_os(): return True
-            if _freebsd_os(): return True
-#             if _osx_os(): return True
-            return False
-            
-        def _osx_os():
-            if sys.platform.startswith('darwin'): return True
-            else: return False                
-        
-        def _cygwin_os():
-            if sys.platform.startswith('cygwin'): return True
-            else: return False
-            
-        def _os2_os():
-            if sys.platform.startswith('os2'): return True
-            else: return False
-            
-        def _os2emx_os():
-            if sys.platform.startswith('os2emx'): return True
-            else: return False
-            
-        def _riscos_os():
-            if sys.platform.startswith('riscos'): return True
-            else: return False
-            
-        def _atheos_os():
-            if sys.platform.startswith('atheos'): return True
-            else: return False                
+        return _checkOS(os)
     
-        def _sun_os():
-            if sys.platform.startswith('sunos'): return True
-            else: return False
-                    
-        def _freebsd_os():
-            if sys.platform.startswith('freebsd'): return True
-            else: return False
-    
-        def _gnu_os():
-            if sys.platform.startswith('gnu'): return True
-            else: return False
-
-        def _unix_os():
-            if _freebsd_os(): return True
-            if _sun_os(): return True
-            if _riscos_os():  return True
-            return False
-
-        def _nix_os():
-            if _freebsd_os(): return True
-            if _sun_os(): return True
-            if _riscos_os(): return True
-            if _linux_os(): return True
-            if _gnu_os(): return True
-            if _osx_os(): return True
-            if _cygwin_os(): return True
-            return False
-                                                                        
-        def _unknown_os():
-            return sys.platform    
-    
-        _os = str(os).lower()
-        
-        if os is None: return sys.platform
-        if sys.platform == _os: return True
-                
-        return {
-                "win"       :_windows_os,
-                "w"         :_windows_os,
-                "windows"   :_windows_os,
-
-                "win32"     :_windows32_os,
-                "w32"       :_windows32_os,
-                "x32"       :_windows32_os,
-
-                "windows32" :_windows32_os,
-                "win64"     :_windows64_os,
-                "w64"       :_windows64_os,
-                "x64"       :_windows64_os,
-                "ia64"      :_windows64_os,
-                "windows64" :_windows64_os,
-                 
-                "g"         :_gnu_os, 
-                "gnu"       :_gnu_os,
-
-                "lin"       :_linux_os, 
-                "l"         :_linux_os,
-                "linux"     :_linux_os,
-                "linux2"    :_linux_os,
-                
-                "freebsd"   :_freebsd_os,
-                "free"      :_freebsd_os,
-                "bsd"       :_freebsd_os,
-                
-                "mac"       :_osx_os,
-                "osx"       :_osx_os,
-                "darwin"    :_osx_os,
-                "dar"       :_osx_os,
-                "apple"     :_osx_os, 
-                
-                "cygwin"    :_cygwin_os,
-                "cyg"       :_cygwin_os,
-                "c"         :_cygwin_os,
-                          
-                "os2emx"    :_os2emx_os,
-                "emx"       :_os2emx_os,
-                    
-                "os2"       :_os2_os,
-                    
-                "risc"      :_riscos_os,
-                "riscos"    :_riscos_os,
-                    
-                "atheos"    :_atheos_os,
-                "athe"      :_atheos_os,
-                "ath"       :_atheos_os,        
-                        
-                "solaris"   :_sun_os,
-                'sol'       :_sun_os,
-                'sun'       :_sun_os,
-                        
-                'unix'      :_unix_os,
-                'nix'       :_nix_os,
-                '*nix'      :_nix_os,
-                
-                }.get(_os)()
-        # Nothing matched. error basically
-#         return False
-        err = ''.join([self.__class__.__name__, ".", inspect.stack()[0][3], ": ", 
-                       "Unable o successfully match an OS. Erroring out instead of passing a False back. "])
-        raise OSError(err)
-                      
-    def checkSanitized(self, s, blacklist = None):
+    def isSanitized(self, value, blacklist = None, system = "local"):
         """
         :NAME:
-            checkSanitized(<string>, blacklist = [<list of strings>])
+            isSanitized(<string>, blacklist = [<list of strings>])
             
         :DESCRIPTION:
             checkSanitized() will check the passed-in string for potential security 
@@ -922,45 +997,51 @@ class Checks(object):
             
         :USAGE:
             s = 'my text string'
-            if checkSanitized(s):
+            if isSanitized(s):
                 <continue with code>
             else:
                 <raise error message>
         """    
-        _os = self.checkOS()
-        s = str(s)
-        
-        # Check the always sanitized stuff
-        # If blacklist is NOT NONE, then dont do this
-        if blacklist is None:
-            """
-            NOTE: THE POSITIONS OF THE SPACES IS CRITICAL HERE.
-            Commands are only commands if spaces before and/or after
-            Think about spaces here
-            """
-            # Think about spaces here
-            _blacklist = [
-                         ' delete ', # General
-                         ' drop ' ,# Database
-                         ' insert ', # Database
-                        ]
-            
-            # Return here. No need to continue if failes. 
-            if (_checkSanitized(s, _blacklist) is False): return False
-            
-        # These get run regardless of blacklist = None
-        
-        if   self.checkOS('linux2')  : return _checkLinuxSanitized(s, blacklist)
-        elif self.checkOS('win')     : return _checkWindowsSanitized(s, blacklist)
-        elif self.checkOS('darwin')  : return _checkOSXSanitized(s, blacklist)
-        else:
-            err = ''.join([
-                           "checks.checkSanitized: ", 
-                           "Unable to sanitize for operating system '", 
-                           str(_os),
-                           "'."
-                           ]) 
-            raise AttributeError(err)
+        bool,value = self.sanitize(value, blacklist, system)
+        return bool
+        #=======================================================================
+        # _os = self.checkOS()
+        # s = str(s)
+        # 
+        # # Check the always sanitized stuff
+        # # If blacklist is NOT NONE, then dont do this
+        # if blacklist is None:
+        #     """
+        #     NOTE: THE POSITIONS OF THE SPACES IS CRITICAL HERE.
+        #     Commands are only commands if spaces before and/or after
+        #     Think about spaces here
+        #     """
+        #     # Think about spaces here
+        #     _blacklist = [
+        #                  ' delete ', # General
+        #                  ' drop ' ,# Database
+        #                  ' insert ', # Database
+        #                 ]
+        #     
+        #     # Return here. No need to continue if failes. 
+        #     if (_checkSanitized(s, _blacklist) is False): return False
+        #     
+        # # These get run regardless of blacklist = None
+        # 
+        # if   self.checkOS('linux2')  : return _checkLinuxSanitized(s, blacklist)
+        # elif self.checkOS('win')     : return _checkWindowsSanitized(s, blacklist)
+        # elif self.checkOS('darwin')  : return _checkOSXSanitized(s, blacklist)
+        # else:
+        #     err = ''.join([
+        #                    "checks.checkSanitized: ", 
+        #                    "Unable to sanitize for operating system '", 
+        #                    str(_os),
+        #                    "'."
+        #                    ]) 
+        #     raise AttributeError(err)
+        #=======================================================================
+    checkSanitized = isSane = isSanitized
+    
     
     def contents(self, value):
         """"""
@@ -981,7 +1062,7 @@ class Checks(object):
         # Just return string
         return str(value)
 
-    def sanitize(self, value, blacklist = None, remove = None):
+    def sanitize(self, value, blacklist = None, system = "local"):
         """
         :NAME:
             sanitize(
@@ -1021,14 +1102,19 @@ class Checks(object):
             A cleaned string.
         """
         value = str(value)
+        if re.search("local", str(system)): 
+            system = _checkOS()
+        system = str(system.lower())
         
-        if   self.checkOS('linux2')  : return _linux_sanitize(value, blacklist, remove)
-        elif self.checkOS('win')     : return _windows_sanitize(value, blacklist, remove)
-        elif self.checkOS('darwin')  : return _OSX_sanitize(value, blacklist, remove)
+        if   re.search("lin",   str(system)): return _linux_sanitize(value, blacklist)
+        elif re.search("darwin",str(system)): return _OSX_sanitize(value, blacklist) # MUST COME BEFORE 'win'
+        elif re.search("win",   str(system)): return _windows_sanitize(value, blacklist)
+        elif re.search("mac",   str(system)): return _OSX_sanitize(value, blacklist)
+        elif re.search("osx",   str(system)): return _OSX_sanitize(value, blacklist)
         else:
             err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
             raise AttributeError(err)
-        
+
     #===============================================================================
     # def checkTempdir(_dir, create = False):
     #     """
@@ -1206,26 +1292,60 @@ class Checks(object):
     def re_search(self, p, s, *args, **kwargs):
         return _re(p, s, 'search', *args, **kwargs)        
 
+    def CheckYN(self, prompt, fullword = False, bool = False):
+        """"""
+        def _true():
+            if bool: return True
+            else:    return "YES"
+            
+        def _false():
+            if bool: return False
+            else:    return "NO"
 
+        # Work    
+        yn = input(prompt)
+        if "yes" in yn.lower(): 
+            return _true()
+
+        elif "y" in yn.lower():
+            if fullword:
+                print("Please type the full word 'yes'")
+                return self.CheckYN(prompt, fullyes, bool)
+            else:
+                return _true()
+    
+        if "no" in yn.lower(): 
+            return _false()
+
+        else:
+            if fullword:
+                print("Please type the full word 'no'")
+                return self.CheckYN(prompt, fullword, bool)
+            else:
+                return _false()
+
+    def isYes(self, prompt, fullword = False, *args, **kwargs):
+        # Override with bool = True
+        return self.CheckYN(prompt, fullword = fullword, bool = True)
+
+    def isNo(self, prompt, fullword = False, *args, **kwargs):
+        # Override with bool = True
+        result = self.CheckYN(prompt, fullword = fullword, bool = True)
+        # CheckYN return True for yes and False for no. 
+        # reverses true and false, since this "isNo"
+        if result is True: return False
+        else:              return True 
+
+    
 if __name__ == "__main__":
     o = Checks()
-    s = r"C:\Some\Path\Data\File.txt"
-    s = r"./yadda/yadda"
-    print('linux?:', o.isLinuxPath(s))
-    print('windows?:',o.isWindowsPath(s))
-    print(o.isPathType(s))
-#     o.isDir(".", create = True, test = False)
-#     print(o.checkOS('linux')
-#===============================================================================
-#     s = ''.join(["This is a test",
-#                  '; sudo - root',
-#                    '; su root',
-#                    ';bash',
-#                    ';   rm -rf alles', # remove
-#                    ';chmod -R 777 filename', # Permissions
-#                    '; chown root:root alles', # Ownership
-#                    ';', # ALWAYS PUT ME LAST
-#                    ]) 
-# 
-#     print(o.sanitize(s, remove = "[\s]")
-#===============================================================================
+    if o.CheckYN("y/N") == "YES": print("YES")
+    #=== Test sanitize =================================================
+    # s = "This sudo is rm -rf not an OK string; kill "
+    # bool,s = o.sanitize(s)
+    # print(bool)
+    # print(s)
+    # print("===")
+    # print(o.isSane(s))
+    #===================================================================
+          
