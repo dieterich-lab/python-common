@@ -18,10 +18,6 @@ __status__      = "Development"
 ##############################################################################
 
 """
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-link me: loghandler.py -> loghandler.py3.py  !!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 LogHandler IS USED BY BOTH ConfigHandler and ErrorHandler.
 AS SUCH, NEITHER CAN BE IMPLEMENTED IN THESE CLASSES WITHOUT WREAKING HAVOC
 """

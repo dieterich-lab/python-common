@@ -1,3 +1,4 @@
+
 ##############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal
 # of "__author__" in this or any constituent # component or file constitutes a
@@ -103,17 +104,8 @@ def RunSubprocess(command, *args, **kwargs):
     if "list" in output.lower(): return result.split() 
 
 if __name__ == '__main__':
-#     log.debug("__main__", logfile = 'syslog', app_name = "Protein_LFQ_Seg1", log_level = 10, screendump = True)
-    command =["ls", "'-la", "/"
-#               "find", "/usr/", "-iname",  "'*.py'",  
-#                 "|", "grep", "-i", "'python'", "|", "grep", "-i", "'2.7'"
-                ]
-    result = RunSubprocess(command, shell = True)
-    print(type(result))
-    print(result)
-    l = result.split()
-    print (l)
-    
-
+    command = ["find", "/etc/", "-type", "f"]
+    output = RunSubprocess(command)
+    print(output)
 
 
