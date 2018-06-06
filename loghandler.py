@@ -616,7 +616,7 @@ class SetLogger(object):
         value = str(value)
         # Set current value for reference
         _orig = self._LOGFILE
-        # Strip and set to lower case
+        # Strip and set to lower case just for "unchanged" test
         _test = ''.join(c for c in str(value) if not re.match("\s", c)).lower()
         # If the passed in value is the same as the current logfile, just return
         if ( (value == self._LOGFILE) or (_test == 'unchanged') ): 
