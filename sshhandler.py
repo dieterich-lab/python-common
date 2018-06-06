@@ -215,8 +215,6 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
 # === PRIVATE METHODS ==========================================
 
     def _getfile(self, src, dst, skip_on_exist = False, skip = []):
-                print("_getfile.skip=", skip) #3333
-
 #             try:
                 msg = ("ssh.get'ing: '{S}' to '{D}'a file...".format(S = str(src), D = str(dst)))
                 if skip_on_exist:
@@ -226,7 +224,6 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
                 
 #                 filename = ntpath.basename(src)
                 for item in skip:
-                    print("Checking item:", item) #333
                     # Pattern is to find JUST the whole item name in a 
                     # path. I.e. item = ".git" must match "/.git/"
                     # No partial matches like ".gitignore"
@@ -340,7 +337,6 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
                 yield x
                                     
     def _getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
-        print("_getdir.skip=", skip) #3333
         for path,folders,files in self._sftp_walk(src):
             for file in files:
                 _subpath = path.replace(src, "")
@@ -517,7 +513,6 @@ class SSH(SSHsuper):
                                     skipped. USE WITH CAUTION.  
             
         """
-        print("get.skip=", skip) #333
         _stat = str(self.sftp.lstat(src))
         if _stat.startswith("d"):
             log.debug("{src} is a directory...")
