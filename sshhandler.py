@@ -24,6 +24,7 @@ Inception  - 2018-03-05 : Martin Reifferscheid
 from common.checks import Checks
 from paramiko import sftp
 checks = Checks()
+_delim = checks.directory_delimiter()
 
 from common.loghandler import log
 from inspect import stack
@@ -213,12 +214,25 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
 
 # === PRIVATE METHODS ==========================================
 
-    def _getfile(self, src, dst, skip_on_exist = False):
+    def _getfile(self, src, dst, skip_on_exist = False, skip = []):
+                print("_getfile.skip=", skip) #3333
+
 #             try:
                 msg = ("ssh.get'ing: '{S}' to '{D}'a file...".format(S = str(src), D = str(dst)))
                 if skip_on_exist:
                     if os.path.exists(dst):
                         log.warning(msg + "SKIPPING! (File already exits)")
+                        return
+                
+#                 filename = ntpath.basename(src)
+                for item in skip:
+                    print("Checking item:", item) #333
+                    # Pattern is to find JUST the whole item name in a 
+                    # path. I.e. item = ".git" must match "/.git/"
+                    # No partial matches like ".gitignore"
+                    p = ''.join([_delim, item, _delim]) 
+                    if re.search(p, src):
+                        log.debug("The item '{I}' is from Path '{S}' is in skip list. SKIPPING!".format(I = item, S = src)) 
                         return
                 
                 # Check for dst dir and create is needed
@@ -325,13 +339,17 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
             for x in self._sftp_walk(new_path):
                 yield x
                                     
-    def _getdir(self, src, dst, skip_on_exist = False, euid = None, egid = None):
+    def _getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
+        print("_getdir.skip=", skip) #3333
         for path,folders,files in self._sftp_walk(src):
             for file in files:
                 _subpath = path.replace(src, "")
                 _dst = os.path.join(dst, _subpath, file)
                 _src = os.path.join(path, file)
-                self._getfile(_src, _dst, skip_on_exist)
+                self._getfile(src = _src, 
+                              dst = _dst, 
+                              skip_on_exist = skip_on_exist, 
+                              skip = skip)
         
 class SSH(SSHsuper):
     """
@@ -407,11 +425,16 @@ class SSH(SSHsuper):
         self.ssh        = paramiko.SSHClient()
         
         if key:
-            try: 
-                self.keypath = key 
+            try:  self.keypath = key 
+            except Exception as e:
+                err = "Private Key ('{K}') raised an error ('{E}'). ".format(K = str(key), E = str(e))
+                log.error(err)
+                raise ValueError(err)
+
+            try:
                 self.key = paramiko.RSAKey.from_private_key_file(self.keypath)
             except Exception as e:
-                err = "Private Key ('{K}') raised an error ('{E}'). ".format(K = checks.obfuscate_key(str(key)), E = str(e))
+                err = "Private Key ('{K}') raised an error ('{E}'). ".format(K = checks.obfuscate_key(str(self.key)), E = str(e))
                 log.error(err)
                 raise ValueError(err)
             
@@ -470,7 +493,7 @@ class SSH(SSHsuper):
             log.error(err)
             raise RuntimeError(err)
         
-    def get(self, src, dst, skip_on_exist = False):
+    def get(self, src, dst, skip_on_exist = False, skip = []):
         """
         :NAME:
             get(src, dst, skip_on_exist)
@@ -494,15 +517,24 @@ class SSH(SSHsuper):
                                     skipped. USE WITH CAUTION.  
             
         """
-        
+        print("get.skip=", skip) #333
         _stat = str(self.sftp.lstat(src))
         if _stat.startswith("d"):
             log.debug("{src} is a directory...")
-            self._getdir(src, dst, skip_on_exist)
+            self._getdir(src = src, 
+                          dst = dst, 
+                          skip_on_exist = skip_on_exist, 
+                          skip = skip)
+
                         
         elif _stat.startswith("-"):
             log.debug("{src} is a file...")
-            self._getfile(src, dst, skip_on_exist)
+            filename = ntpath.basename(src)
+            #_getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
+            self._getfile(src = src, 
+                          dst = dst, 
+                          skip_on_exist = skip_on_exist, 
+                          skip = skip)
 
         else: 
             err = "Unable to determine if 'src' ({S}) is a file or directory. self.sftp.lstat returned with '{T}'".format(S = str(src), T = _stat)
@@ -528,7 +560,7 @@ if __name__ == '__main__':
             port = 22
              )
 #     o.put("/Users/mikes/Documents/tmp/", "/home/mrightmire/tmp/")
-    o.get(src = "/home/metadata/metadata/", dst="/Users/mikes/Documents/tmp/sshhandlertest/", skip_on_exist = True)
+    o.get(src = "/home/metadata/metadata/", dst="/Users/mikes/Documents/tmp/sshhandlertest/", skip_on_exist = True, skip = [".git"])
       
         
         
