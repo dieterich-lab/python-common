@@ -411,7 +411,7 @@ class SSH(SSHsuper):
                 self.keypath = key 
                 self.key = paramiko.RSAKey.from_private_key_file(self.keypath)
             except Exception as e:
-                err = "Private Key ('{K}') raised an error ('{E}'). ".format(K = checks.obfuscate_key(str(key), E = str(e)))
+                err = "Private Key ('{K}') raised an error ('{E}'). ".format(K = checks.obfuscate_key(str(key)), E = str(e))
                 log.error(err)
                 raise ValueError(err)
             
