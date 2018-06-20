@@ -22,9 +22,9 @@ Inception  - 2018-03-05 : Martin Reifferscheid
 """
 
 from common.checks import Checks
-from paramiko import sftp
 checks = Checks()
 _delim = checks.directory_delimiter()
+from paramiko import sftp
 
 from common.loghandler import log
 from inspect import stack
@@ -36,6 +36,16 @@ import os
 import paramiko
 import re
 
+#=== GLOBAL PROTECTED DIRECTORIES =====================================
+protected_paths = [_delim, # Root dir 
+                  "etc", "var", "lib", "home", "usr/local",  
+                  "bin",   "dev",  "initrd", "installimage", 
+                  "lib32", "libx32", "media", "opt", "proc", 
+                  "run", "srv", "tmp", "vmlinuz", "boot", 
+                  "installimage", "lib64", "mnt", "root",  
+                  "sbin", "sys", "vmlinuz" ]
+#======================================================================
+        
 class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
     """
     USe this for all properties and hidden methods
@@ -220,26 +230,58 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
             err = "Unable to change path's ownership to '{U}:{G}' (ERROR: {E})".format(U = str(uid), G = str(gid), E = str(e))
             log.error(err)
     
+    def _is_protected_path(self, src):        
+        # Error out if src = these directores, 
+        # but not subdirectories of these directories
+        for dir in protected_paths:
+            # spaces + any num / + dir + any num / + spaces + NOT MATCH anything else after these spaces then end
+            # The "^" (START) and "$" (END) is added later  
+            p = ''.join(["\s*", "[", _delim, "]*", dir, "[", _delim, "]*\s*"])
+            # Check for matches an error
+            err = "sshhandler._deletedir({S}): appears to have a protected directory in the path. HALTED!".format(S = src)
+            # First check without quotes
+            pattern = "^" + p + "$" # Start(^) and end ($)
+            if re.match(pattern, src): return True # protected dir  
+            # Then match inside quotes
+            pattern = ".*'" + p + ".*'.*"     # If starts with anything + ' + the pattern + ' + anything
+            if re.match(pattern, src):  return True # protected dir
+            pattern = '.*"' + p + '.*".*' # If starts with anything + " + the pattern + " + anything
+            if re.match(pattern, src):  return True # protected dir
+            
+        return False # Its OK            
+        
     def _deletedir(self, src, euid = None, egid = None):
         """
         """
-        self.sftp.rmdir(src)
-#===============================================================================
-#         for path,folders,files in self.sftp_walk(src):
-#             for file in files:
-#                 # You must lstrip any leading delimiter from _subpath
-#                 # Otherwise os.join makes it the leading dir!!! 
-#                 _subpath = path.replace(src, "").lstrip(_delim)
-#                 _dst = os.path.join(dst, _subpath, file)
-#                 _src = os.path.join(path, file)
-# #                 log.debug("SSHsuper._getdir: Calling '_getfile' with  src = '{}', dst = '{}',  skip_on_exist = '{}',  skip = '{}'".format(_src, _dst, skip_on_exist, skip))
-#                 self._getfile(src = _src, 
-#                               dst = _dst, 
-#                               skip_on_exist = skip_on_exist, 
-#                               skip = skip)
-#===============================================================================
+        # Paramiko doesn't yet delete filled directories...so we need to 
+        # use an exec. As such, we sanitze it carefully 
+        # first sanitize using checks. This removes anything after a ';'
+        src = checks.sanitize(src)
+        # Next we disallow ay protected directories
+        # Currently linux only
+        if self._is_protected_path(src):
+            err = "sshhandler._deletedir({S}): appears to have a protected directory in the path. HALTED!".format(S = src)
+            raise RuntimeError(err)
+        try:
+            msg = "Deleting directory '{S}' ...".format(S = src)
+            command = ''.join(["rm -rf ", src])
+            # Use the main paramiko ssh connection 
+            (stdin, stdout, stderr) = self.ssh.exec_command(command)
+            #self.sftp.rmdir(src) # This later if they get it fixed
+            log.debug(msg + "OK")
+        except Exception as e:
+            err = msg + "FAILED! (ERROR: {E})".format(E = str(e))
+            log.error(err)
+            raise type(e)(err)
 
     def _deletefile(self, src, *args, **kwargs):
+        src = self._clean_semi_colon(src)
+        src = checks.sanitze(src)
+
+        if _is_protected_path(src):
+            err = "sshhandler._deletedir({S}): appears to have a protected directory in the path. HALTED!".format(S = src)
+            raise RuntimeError(err)
+
         msg = ("ssh.deleting: '{S}...".format(S = str(src)))
         try:
            self.sftp.remove(src)
@@ -400,7 +442,6 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
                 folders = [folder] + folders# Put it at the front
         return folders    
                     
-
     def sftp_walk(self,remotepath):
         """
         :NAME:

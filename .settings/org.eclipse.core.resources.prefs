@@ -7,3 +7,4 @@ encoding/directory_tools.py=utf-8
 encoding/loghandler.py=utf-8
 encoding/printdots.py=utf-8
 encoding/sshhandler.py=utf-8
+encoding/ynprompt.py=utf-8

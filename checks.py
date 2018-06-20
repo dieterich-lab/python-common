@@ -8,7 +8,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.1.6"
+__version__     = "0.9.1.7"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
@@ -113,13 +113,13 @@ def _makedir(_path):
 #     _dir = _dir + self._delim
     _dir = _dir + self.directory_deliminator()
     try:
-        print("Making dir: '{}'".format(_dir))
         os.makedirs(_dir)
         return True
     
     except Exception as e:
-        print(e)
-        return False
+        err = "Error attempting to create directory(ies) '{D}' (ERROR: E)".format(D = _dir, E = str(e))
+#         return False
+        raise type(e)(err)
 
 
 def _check_for_directory_flag(**kwargs):
@@ -376,6 +376,7 @@ def _sanitize(value, blacklist):
              submitted. If set, AND NO BLACKLIST, the default blacklist for that 
              OS will be used.  
     """
+    print("_sanitize.value = ", value) #333
     if not isinstance(blacklist, (list,tuple)):
         e = "checks._sanitize: Parameter 'blacklist' must be a list, not '{T}' (blacklist = '{B}'). ".format( T = str(type(blacklist)), B = str(blacklist))
         raise AttributeError(e)
@@ -389,6 +390,8 @@ def _sanitize(value, blacklist):
     else: return (False, result)
 
 def _linux_sanitize(value, blacklist = None):
+    # First remove anything coming after a semi-colon
+    value = str(value).split(";")[0]
     if blacklist is None: blacklist = linux_blacklist
     return _sanitize(value, blacklist)
 
@@ -397,8 +400,10 @@ def _windows_sanitize(value, blacklist = None):
     raise NotImplementedError(err)
 
 def _OSX_sanitize(value, blacklist = None):
-    if blacklist is None: blacklist = linux_blacklist
-    return _sanitize(value, blacklist)
+    # Basically teh same a Linux
+    return _linux_sanitize(value, blacklist)
+#     if blacklist is None: blacklist = linux_blacklist
+#     return _sanitize(value, blacklist)
 
 def _errout(msg, errtype = None):
     if 'exception' in str(errtype).lower():
@@ -1002,8 +1007,14 @@ class Checks(object):
             else:
                 <raise error message>
         """    
-        bool,value = self.sanitize(value, blacklist, system)
-        return bool
+        if   re.search("lin",   str(system)): return _linux_sanitize(value, blacklist)[0]
+        elif re.search("darwin",str(system)): return _OSX_sanitize(value, blacklist)[0] # MUST COME BEFORE 'win'
+        elif re.search("win",   str(system)): return _windows_sanitize(value, blacklist)[0]
+        elif re.search("mac",   str(system)): return _OSX_sanitize(value, blacklist)[0]
+        elif re.search("osx",   str(system)): return _OSX_sanitize(value, blacklist)[0]
+        else:
+            err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
+            raise AttributeError(err)
         #=======================================================================
         # _os = self.checkOS()
         # s = str(s)
@@ -1106,11 +1117,11 @@ class Checks(object):
             system = _checkOS()
         system = str(system.lower())
         
-        if   re.search("lin",   str(system)): return _linux_sanitize(value, blacklist)
-        elif re.search("darwin",str(system)): return _OSX_sanitize(value, blacklist) # MUST COME BEFORE 'win'
-        elif re.search("win",   str(system)): return _windows_sanitize(value, blacklist)
-        elif re.search("mac",   str(system)): return _OSX_sanitize(value, blacklist)
-        elif re.search("osx",   str(system)): return _OSX_sanitize(value, blacklist)
+        if   re.search("lin",   str(system)): return _linux_sanitize(value, blacklist)[1]
+        elif re.search("darwin",str(system)): return _OSX_sanitize(value, blacklist)[1] # MUST COME BEFORE 'win'
+        elif re.search("win",   str(system)): return _windows_sanitize(value, blacklist)[1]
+        elif re.search("mac",   str(system)): return _OSX_sanitize(value, blacklist)[1]
+        elif re.search("osx",   str(system)): return _OSX_sanitize(value, blacklist)[1]
         else:
             err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
             raise AttributeError(err)
@@ -1352,7 +1363,13 @@ class Checks(object):
     
 if __name__ == "__main__":
     o = Checks()
-    if o.CheckYN("y/N") == "YES": print("YES")
+    s ="/etc; hello"
+    blacklist = ["/", "etc"]
+    print(o.sanitize(s, 
+#                      blacklist, 
+#                      system
+                     ))
+#    if o.CheckYN("y/N") == "YES": print("YES")
     #=== Test sanitize =================================================
     # s = "This sudo is rm -rf not an OK string; kill "
     # bool,s = o.sanitize(s)
