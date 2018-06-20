@@ -214,12 +214,67 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
 
 # === PRIVATE METHODS ==========================================
 
+    def _chown(self, path, uid, gid):
+        try: self.sftp.chown(path, uid = uid, gid = gid)
+        except Exception as e:
+            err = "Unable to change path's ownership to '{U}:{G}' (ERROR: {E})".format(U = str(uid), G = str(gid), E = str(e))
+            log.error(err)
+    
+    def _deletedir(self, src, euid = None, egid = None):
+        """
+        """
+        self.sftp.rmdir(src)
+#===============================================================================
+#         for path,folders,files in self.sftp_walk(src):
+#             for file in files:
+#                 # You must lstrip any leading delimiter from _subpath
+#                 # Otherwise os.join makes it the leading dir!!! 
+#                 _subpath = path.replace(src, "").lstrip(_delim)
+#                 _dst = os.path.join(dst, _subpath, file)
+#                 _src = os.path.join(path, file)
+# #                 log.debug("SSHsuper._getdir: Calling '_getfile' with  src = '{}', dst = '{}',  skip_on_exist = '{}',  skip = '{}'".format(_src, _dst, skip_on_exist, skip))
+#                 self._getfile(src = _src, 
+#                               dst = _dst, 
+#                               skip_on_exist = skip_on_exist, 
+#                               skip = skip)
+#===============================================================================
+
+    def _deletefile(self, src, *args, **kwargs):
+        msg = ("ssh.deleting: '{S}...".format(S = str(src)))
+        try:
+           self.sftp.remove(src)
+           log.warning(msg + "OK")
+        
+        except Exception as e:
+           msg += "FAILED! (ERROR: {E})".format(E = str(e))
+           log.error(msg)
+
+    def _getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
+        """
+        _getdir(src, dst, skip_on_exist = False, skip = [], euid = None, egid = None)        
+        src must be a directory path. 
+        dst must be a directory path. 
+        """
+        for path,folders,files in self.sftp_walk(src):
+            for file in files:
+                # You must lstrip any leading delimiter from _subpath
+                # Otherwise os.join makes it the leading dir!!! 
+                _subpath = path.replace(src, "").lstrip(_delim)
+                _dst = os.path.join(dst, _subpath, file)
+                _src = os.path.join(path, file)
+#                 log.debug("SSHsuper._getdir: Calling '_getfile' with  src = '{}', dst = '{}',  skip_on_exist = '{}',  skip = '{}'".format(_src, _dst, skip_on_exist, skip))
+                self._getfile(src = _src, 
+                              dst = _dst, 
+                              skip_on_exist = skip_on_exist, 
+                              skip = skip)
+
     def _getfile(self, src, dst, skip_on_exist = False, skip = []):
 #             try:
-                msg = ("ssh.get'ing: '{S}' to '{D}'a file...".format(S = str(src), D = str(dst)))
+                msg = ("ssh.get'ing: '{S}' to '{D}'...".format(S = str(src), D = str(dst)))
                 if skip_on_exist:
                     if os.path.exists(dst):
-                        log.warning(msg + "SKIPPING! (File already exits)")
+                        # Re-enable for troubleshooting
+                        # log.warning(msg + "SKIPPING! (File already exits)")
                         return
                 
 #                 filename = ntpath.basename(src)
@@ -229,7 +284,8 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
                     # No partial matches like ".gitignore"
                     p = ''.join([_delim, item, _delim]) 
                     if re.search(p, src):
-                        log.debug("The item '{I}' is from Path '{S}' is in skip list. SKIPPING!".format(I = item, S = src)) 
+                        # Re-enable for troubleshooting
+                        # log.debug("The item '{I}' is from Path '{S}' is in skip list. SKIPPING!".format(I = item, S = src)) 
                         return
                 
                 # Check for dst dir and create is needed
@@ -253,43 +309,33 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
 #                 log.error(msg)
 # #                 raise RuntimeError(err)
 #===============================================================================
-            
-    def _putfile(self, src, dst, skip_on_exist = False):
-            try:
-                msg = ("ssh.put'ing: '{S}' to '{D}'a file...".format(S = str(src), D = str(dst)))
-                _dstpath = ntpath.dirname(dst)
-                _dstname = ntpath.basename(dst)
-                
-                if skip_on_exist:
-                    if _dstname in self.sftp.listdir(_dstpath):
-                        log.warning(msg + "SKIPPING! (File already exits)")
-                        return
-                
-                if not os.path.exists(_dstpath):
-                    msg2 = "Attempting to create destination directory '{}'...".format(_dstpath)
-                    try:
-                        os.mkdir()
-                        log.warning(msg + "OK")
-                    except Exception as e:
-                        msg += "FAILED! (ERROR: {})".format(str(e))
-                        log.error(msg)
-                        # continue
-                        
-                self.sftp.put(src, dst)
-                log.debug(msg + "OK")
-            
-            except Exception as e:
-                msg += "FAILED! (ERROR: {E})".format(E = str(e))
-                log.error(msg)
-#                 raise RuntimeError(err)
 
-    def _chown(self, path, uid, gid):
-        try: self.sftp.chown(path, uid = uid, gid = gid)
-        except Exception as e:
-            err = "Unable to change path's ownership to '{U}:{G}' (ERROR: {E})".format(U = str(uid), G = str(gid), E = str(e))
-            log.error(err)
-            # continue
-    
+    def _make_all_remote_dirs(self, dirpath):
+        """
+        This rolls through the directory path, and makes any remote 
+        directories and subdirectories that do not already exist.
+        
+        'dirpath' must be the DIRECTORY PATH ONLY (Do NOT include the 
+        filename) or you will get weird results.   
+        """
+        _dirlist = self._split_dir_path(dirpath)
+
+        _remotedir = ""
+        for _dir in _dirlist:
+            _remotedir = os.path.join(_remotedir,_dir) # Add it to the continuing chain
+            # Try will error if dir does not exist on remote end
+            test = self.stat_remote_path(_remotedir)
+            if test is None:
+#             if self.stat_remote_path(_dir) is None:
+                log.debug("Making  remote dir '{}'".format(_remotedir))
+                self._mkdir(_remotedir)
+                #===============================================================
+                # try: self.sftp.mkdir(_remotedir) # Make the dir at this level
+                # except Exception as e:
+                #     err = "sshhandler._make_all_remote_dirs: Failed to make remote directory of '{D}'!. (ERROR: {E})".format(D = _remotedir, E = str(e))
+                #     raise type(e)(err)
+                #===============================================================
+                    
     def _mkdir(self, path):
         msg = ("Creating destination dir: '{D}'".format(D = path))
         try: 
@@ -298,27 +344,82 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
             # if egid: self._change_group(_dstroot, euid, egid)
             log.debug(msg + "OK")
         except Exception as e:
-            msg += "FAILED! (ERROR: {E}).format(E = str(e)"
+            msg += "FAILED! (ERROR: {E})".format(E = str(e))
             raise type(e)(msg)
         
     def _putdir(self, src, dst, skip_on_exist = False, euid = None, egid = None):
-        log.debug("'{}' is a directory.".format(str(src)))
         for root, dirs, files in os.walk(src):
             # Set destination path
             _dstroot = os.path.join(dst,root.replace(src,""))
-            # First chnage to dest dir. Make if does not exsist
+            # First change to dest dir. Make if does not exist
             try: 
                 self.sftp.chdir(_dstroot)
-            except Exception as e: 
-                self._mkdir(_dstroot)
-                self.sftp.chdir(_dstroot)
+            except Exception as e:
+                try: 
+                    self.sftp.mkdir(_dstroot)
+                    self.sftp.chdir(_dstroot)
+                except Exception as e:
+                    err = "Unable to make remote directory '{D}' (ERROR: {E})".format(D = _dstroot, E = str(e))
+                    raise type(e)(err)
             # Now copy all files in this dir
             for file in files:
                 _dstfile = os.path.join(_dstroot, file)
                 _srcfile = os.path.join(root, file)
                 self._putfile(_srcfile, _dstfile, skip_on_exist)
 
-    def _sftp_walk(self,remotepath):
+    def _putfile(self, src, dst, skip_on_exist = False):
+        self.sftp.chdir("/")
+        _dstpath = ntpath.dirname(dst)
+        _dstname = ntpath.basename(dst)
+        msg = "Copying local file '{F}' to remote server ...".format(F = str(src))
+        try: 
+            if skip_on_exist:
+                if _dstname in self.sftp.listdir(_dstpath):
+                    log.warning(msg + "SKIPPING! (File already exits)")
+                    return
+        except: pass
+        # Roll through the directory path and 
+        # make all subdirs at once.
+        self._make_all_remote_dirs(_dstpath) 
+
+        try:
+            self.sftp.put(src, dst)
+            log.debug(msg + "OK")
+        except Exception as e:
+            err = msg + "FAILED! during copy of local file '{F}' to remote server (ERROR: {E})".format(E = str(e))
+            log.error(err)
+            raise type(e)(err)
+    
+    def _split_dir_path(self, path):
+        folders = []
+        while True:
+            path, folder = os.path.split(path)
+            if folder == "":
+                break 
+            else:
+                folders = [folder] + folders# Put it at the front
+        return folders    
+                    
+
+    def sftp_walk(self,remotepath):
+        """
+        :NAME:
+            sftp_walk(remotepath)
+            
+        :DESCRIPTION:
+            sftp_walk is based on os.walk It walks remotepath and yields
+            the same data as os.walk, except on the remote system
+            
+            (Uses ssh)
+             
+        :PARAMETERS:
+            remotepath = The full path of the remote directory.
+                         DO NOT include the user or server information 
+                         here. That is set at class instantiation. 
+        :YIELDS:
+            (path,folders,files) on the remote directory (Identical to 
+            os.walk)
+        """
         # Kindof a stripped down  version of os.walk, implemented for 
         # sftp.  Tried running it flat without the yields, but it really
         # chokes on big directories.
@@ -330,22 +431,35 @@ class SSHsuper(metaclass=abc.ABCMeta): # Change from the template name
                 folders.append(f.filename)
             else:
                 files.append(f.filename)
+        
         yield path,folders,files
+        
         for folder in folders:
             new_path=os.path.join(remotepath,folder)
-            for x in self._sftp_walk(new_path):
+            for x in self.sftp_walk(new_path):
                 yield x
                                     
-    def _getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
-        for path,folders,files in self._sftp_walk(src):
-            for file in files:
-                _subpath = path.replace(src, "")
-                _dst = os.path.join(dst, _subpath, file)
-                _src = os.path.join(path, file)
-                self._getfile(src = _src, 
-                              dst = _dst, 
-                              skip_on_exist = skip_on_exist, 
-                              skip = skip)
+    def stat_remote_path(self, path):
+        try:  return str(self.sftp.lstat(path))
+        except FileNotFoundError as e: return None 
+        except PermissionError as e  : return "exists" # Cant read it but it's there
+
+    def remote_is_file(self, path):
+        _stat = stat_remote_path(path)
+        if _stat.startswith("-"):
+            return True
+        
+    def remote_is_dir(self, path):
+        _stat = stat_remote_path(path)
+        if _stat.startswith("d"):
+            return True
+        
+    
+    def remote_path_is(self, path):
+        if   self.remote_is_dir: return "directory"
+        elif self.remote_is_file: return "file"
+        else: 
+            err = "sshhandler.remote_is: Unable to determine remote file type of '{P}'".format(P = str(path))
         
 class SSH(SSHsuper):
     """
@@ -355,6 +469,15 @@ class SSH(SSHsuper):
     :DESCRIPTION:
         A Paramiko based ssh management class, for handling the drudgery
         of ssh transfers. 
+        
+        SSH IS A SINGLETON CLASS!! This means you onle need to set the 
+        configuration parameters ONCE per master script. All subsequent 
+        objects instantiated by the master script will inherit the 
+        settings. 
+        
+        THE SSH OBJECT DOES NEED TO BE INSTANTIATED BY EACH SUB-OBJECT
+        TO THE MASTER, HOWEVER.
+         
     :ATTRIBUTES:
         
         server: The IP or FQDN of the remote server with which to SSH.
@@ -400,6 +523,49 @@ class SSH(SSHsuper):
         ssh.get("/my/remote/files/", "/my/other/dir/")           
         
     """
+    __exists = False
+
+    def __new__(cls,
+                key = None, 
+                known_hosts = None, 
+                user = None, 
+                password = None, 
+                server = None, 
+                port = None, 
+                *args, **kwargs
+                ):
+        """
+        This is a singleton class.
+
+        The __new__ method is called prior to instantiation with __init__.
+        If there's already an instance of the class, the existing object is
+        returned. If it doesn't exist, a new object is instantiated with
+        the __init__.
+        """
+
+        # __init__ is called no matter what, so...
+        # If there is NOT an instance, just create an instance
+        # This WILL run __init__
+        # Do NOT set self.__exists here, since if _-exists == True, __init__ is
+        # cancelled (it must still run at the first instantiation)
+        if not hasattr(cls, 'instance'):
+            # Create an instance
+            cls.instance = super(SSH, cls).__new__( cls#,                 
+#                                                     key = None, 
+#                                                     known_hosts = None, 
+#                                                     user = None, 
+#                                                     password = None, 
+#                                                     server = None, 
+#                                                     port = None, 
+#                                                     *args, **kwargs
+                                                     )
+            return cls.instance
+        # Else if an instance does exist, set a flag since
+        # __init__is called, but flag halts completion (just returns)
+        else:
+            cls.instance.__exists = True
+            return cls.instance
+
     def __init__(self, 
                 key = None, 
                 known_hosts = None, 
@@ -409,6 +575,10 @@ class SSH(SSHsuper):
                 port = None, 
                  *args, **kwargs
                  ):
+        
+        # __init__ always runs, regardless of the results of __new__
+        # so, If an instance already exists, return (don't run the __init__)
+        if self.__exists: return
         
         super().__init__(key, 
                             known_hosts, 
@@ -453,6 +623,43 @@ class SSH(SSHsuper):
             self.ssh.connect(self.server, username=self.user, port = self.port, password = self.password)
             
         log.debug("ssh.connect: '{}'".format(str(self.ssh.connect)))
+
+    def delete(self, src, *args, **kwargs):
+        """
+        :NAME:
+            get(src, dst, skip_on_exist)
+            
+        :DESCRIPTION:
+            Use ssh to copy the source to the destination. Can be used
+            for individual files as well as directories.
+             
+        :PARAMETERS:
+            src: The source file or directory (remote system). 
+
+            dst: The destination file or directory (local filesystem).
+            
+            skip_on_exist: If the destination FILE already exists, don't 
+                           copy the file. 
+                           DEFAULT: False
+                           WARNING: The method does NOT do a checksum, 
+                                    It only checks for existence. If the
+                                    source file has changed, but has the 
+                                    same name, the file will still be 
+                                    skipped. USE WITH CAUTION.  
+            
+        """
+        _stat = str(self.sftp.lstat(src))
+        if _stat.startswith("d"):
+            self._deletedir(src = src)
+                        
+        elif _stat.startswith("-"):
+            filename = ntpath.basename(src)
+            self._deletefile(src = src)
+
+        else: 
+            err = "Unable to determine if 'src' ({S}) is a file or directory. self.sftp.lstat returned with '{T}'".format(S = str(src), T = _stat)
+            log.error(err)
+            raise RuntimeError(err)
         
     def put(self, src, dst, skip_on_exist = False):
         """
@@ -513,28 +720,23 @@ class SSH(SSHsuper):
                                     skipped. USE WITH CAUTION.  
             
         """
-        _stat = str(self.sftp.lstat(src))
-        if _stat.startswith("d"):
-            log.debug("{src} is a directory...")
-            self._getdir(src = src, 
-                          dst = dst, 
-                          skip_on_exist = skip_on_exist, 
-                          skip = skip)
+        try: 
+            if "dir" in self.remote_path_is(src):
+                self._getdir(src = src, 
+                              dst = dst, 
+                              skip_on_exist = skip_on_exist, 
+                              skip = skip)
 
                         
-        elif _stat.startswith("-"):
-            log.debug("{src} is a file...")
-            filename = ntpath.basename(src)
-            #_getdir(self, src, dst, skip_on_exist = False, skip = [], euid = None, egid = None):
-            self._getfile(src = src, 
-                          dst = dst, 
-                          skip_on_exist = skip_on_exist, 
-                          skip = skip)
+            elif "file" in self.remote_path_is(src):
+                filename = ntpath.basename(src)
+                self._getfile(src = src, 
+                              dst = dst, 
+                              skip_on_exist = skip_on_exist, 
+                              skip = skip)
 
-        else: 
-            err = "Unable to determine if 'src' ({S}) is a file or directory. self.sftp.lstat returned with '{T}'".format(S = str(src), T = _stat)
-            log.error(err)
-            raise RuntimeError(err)
+        except Exception as e:
+            raise
         
 if __name__ == '__main__':
     log.debug(

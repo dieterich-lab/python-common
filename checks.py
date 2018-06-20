@@ -1336,6 +1336,19 @@ class Checks(object):
         if result is True: return False
         else:              return True 
 
+    def split_path(self, path):
+        raise NotImplementedError("checks.split_path is not yet implemented.")
+        folders = []
+        while 1:
+            path, folder = os.path.split(path)
+        
+            if folder != "":
+                folders.append(folder)
+            else:
+                if path != "":
+                    folders.append(path)
+        
+                break        
     
 if __name__ == "__main__":
     o = Checks()
