@@ -1012,7 +1012,7 @@ class Checks(object):
         elif re.search("mac",   _os): return _OSX_sanitize(value, blacklist)[0]
         elif re.search("osx",   _os): return _OSX_sanitize(value, blacklist)[0]
         else:
-            err = "checks.checkSanitized: Unable to sanitize for operating system '{}'."format(str(_os))             
+            err = "checks.checkSanitized: Unable to sanitize for operating system '{}'.".format(str(_os))             
 #            err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
             raise AttributeError(err)
         #=======================================================================
