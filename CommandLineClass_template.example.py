@@ -3,7 +3,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "Biocom Software and Biotechnology"
 __license__     = "Not licensed for private use."
-__version__     = "0.9.0.0"
+__version__     = "0.9.0.1"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Michael.Rightmire@BiocomSoftware.Com"
 __status__      = "Development"
@@ -291,7 +291,7 @@ class MyTool(SuperMyTool):
             parser.add_argument('--diffbackuppool', action='store', dest="DIFFBACKUPPOOL", type=str, default = None, help='The generic "Differential" backup pool.')
             parser.add_argument('--incbackuppool', action='store', dest="INCBACKUPPOOL", type=str, default = None, help='The generic "Incremental" backup pool.')
             
-        super().__init__(parser, args, kwargs)
+        super().__init__(parser, *args, **kwargs)
 
         # Always set the defaults via the @property
         self.backup_type    = self.kwargs.get("TYPE",          None) 

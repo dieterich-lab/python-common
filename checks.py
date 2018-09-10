@@ -8,7 +8,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.1.7"
+__version__     = "0.9.1.8"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
@@ -376,7 +376,6 @@ def _sanitize(value, blacklist):
              submitted. If set, AND NO BLACKLIST, the default blacklist for that 
              OS will be used.  
     """
-    print("_sanitize.value = ", value) #333
     if not isinstance(blacklist, (list,tuple)):
         e = "checks._sanitize: Parameter 'blacklist' must be a list, not '{T}' (blacklist = '{B}'). ".format( T = str(type(blacklist)), B = str(blacklist))
         raise AttributeError(e)
@@ -636,11 +635,9 @@ class Checks(object):
     
     def fullPath(self, path, *args, **kwargs):
         _path = str(path).strip() # REMOVE WHITESPACE FROM ENDS
-        
-        if not _path.startswith(self._delim):
-            # Its relative or just a single word (assuming relative)
-            _path = ''.join([ntpath.dirname(self._calling_file), self._delim, _path])
-        
+        if not os.path.isabs(_path):
+            _dirname = ntpath.dirname(self._calling_file)
+            _path = os.path.join(_dirname, _path)                
         return _path
                       
     def fullPathCheck(self, path, *args, **kwargs):
@@ -698,6 +695,7 @@ class Checks(object):
         _calling_path = os.path.dirname(inspect.getfile(sys._getframe(1)))
         _calling_file = str(inspect.getfile(sys._getframe(1)))
         _path = str(path).strip() # Remove whitespaces
+
 #         _delim = self.directory_deliminator()
         _result = False # Negative assumption
         _dir =  _check_for_directory_flag(**kwargs)
@@ -1007,13 +1005,15 @@ class Checks(object):
             else:
                 <raise error message>
         """    
-        if   re.search("lin",   str(system)): return _linux_sanitize(value, blacklist)[0]
-        elif re.search("darwin",str(system)): return _OSX_sanitize(value, blacklist)[0] # MUST COME BEFORE 'win'
-        elif re.search("win",   str(system)): return _windows_sanitize(value, blacklist)[0]
-        elif re.search("mac",   str(system)): return _OSX_sanitize(value, blacklist)[0]
-        elif re.search("osx",   str(system)): return _OSX_sanitize(value, blacklist)[0]
+        _os = self.checkOS()
+        if   re.search("lin",   _os): return _linux_sanitize(value, blacklist)[0]
+        elif re.search("darwin",_os): return _OSX_sanitize(value, blacklist)[0] # MUST COME BEFORE 'win'
+        elif re.search("win",   _os): return _windows_sanitize(value, blacklist)[0]
+        elif re.search("mac",   _os): return _OSX_sanitize(value, blacklist)[0]
+        elif re.search("osx",   _os): return _OSX_sanitize(value, blacklist)[0]
         else:
-            err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
+            err = "checks.checkSanitized: Unable to sanitize for operating system '{}'."format(str(_os))             
+#            err = ''.join(["checks.checkSanitized: ", "Unable to sanitize for operating system '", str(_os), "'." ]) 
             raise AttributeError(err)
         #=======================================================================
         # _os = self.checkOS()

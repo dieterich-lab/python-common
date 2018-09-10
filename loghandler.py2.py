@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 ###############################################################################
 # Removal of the "__license__" line or content from  "__license__", or removal
 # of "__author__" in this or any constituent # component or file constitutes a
@@ -11,7 +8,7 @@
 __author__      = "Mike Rightmire"
 __copyright__   = "BioCom Software"
 __license__     = "PERPETUAL_AND_UNLIMITED_LICENSING_TO_THE_CLIENT"
-__version__     = "0.9.9.0"
+__version__     = "0.9.8.0"
 __maintainer__  = "Mike Rightmire"
 __email__       = "Mike.Rightmire@BiocomSoftware.com"
 __status__      = "Development"
@@ -162,8 +159,7 @@ class log(object):
     """
     @classmethod    
     def _message(self, value):
-        try:value = value.encode().decode()
-        except AttributeError: value = str(value)
+        value = str(value)
         while len(value) > 1024: # limit for some logfiles
             value = value[:len(value) - 1]
         return value
@@ -223,17 +219,6 @@ class log(object):
         create_paths = kwargs.pop('create_paths',   'UNCHANGED') # Not standard logger value
         migrate      = kwargs.pop('migrate',        'UNCHANGED') # Not standard logger value
         # Be sure instantiate is sent as True
-        #=======================================================================
-        # print("app_name     =", app_name) #333
-        # print("logfile      =", logfile) #333
-        # print("log_level    =", log_level) #333
-        # print("screendump   =", screendump) #333
-        # print("format       =", format) #333
-        # print("create_paths =", create_paths) #333
-        # print("migrate      =", migrate)  #333
-        # print("instantiate  =", True )# MUST BE TRUE  #333
-        #=======================================================================
-                            
         logger = SetLogger(
                             app_name     = app_name,
                             logfile      = logfile,
@@ -528,18 +513,7 @@ class SetLogger(object):
 
         self.handlers = []
         # CHECK FOR NEW INIT OR CHANGES PARAMS=================================
-
-        #=======================================================================
-        # print("app_name     =", app_name) #333
-        # print("logfile      =", logfile) #333
-        # print("log_level    =", log_level) #333
-        # print("screendump   =", screendump) #333
-        # print("format       =", format) #333
-        # print("create_paths =", create_paths) #333
-        # print("migrate      =", migrate)  #333
-        # print("instantiate  =", True )# MUST BE TRUE  #333
-        #=======================================================================
-                
+        
         if ( (app_name      != 'UNCHANGED') or (self.__exists is False) ): self.app_name = app_name
         if ( (log_level     != 'UNCHANGED') or (self.__exists is False) ): self.log_level = log_level
         if ( (screendump    != 'UNCHANGED') or (self.__exists is False) ): self.screendump = screendump
@@ -638,7 +612,7 @@ class SetLogger(object):
         value = str(value)
         # Set current value for reference
         _orig = self._LOGFILE
-        # Strip and set to lower case just for "unchanged" test
+        # Strip and set to lower case
         _test = ''.join(c for c in str(value) if not re.match("\s", c)).lower()
         # If the passed in value is the same as the current logfile, just return
         if ( (value == self._LOGFILE) or (_test == 'unchanged') ): 
@@ -1085,8 +1059,8 @@ class SetLogger(object):
 if __name__ == '__main__':
     import time
     log.debug(
-              ' Dateien angefügt', 
-              app_name = "test", 
+              'test', 
+              app_name = 'test', 
               log_level = 10, 
               logfile = 'stdout', 
               screendump = False

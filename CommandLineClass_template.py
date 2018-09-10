@@ -291,8 +291,8 @@ class ClassName(SuperClassName):
             parser.add_argument('--diffbackuppool', action='store', dest="DIFFBACKUPPOOL", type=str, default = None, help='The generic "Differential" backup pool.')
             parser.add_argument('--incbackuppool', action='store', dest="INCBACKUPPOOL", type=str, default = None, help='The generic "Incremental" backup pool.')
             
-        super().__init__(parser, args, kwargs)
-
+        super(ClassName, self).__init__(parser, *args, **kwargs)
+        
         # Always set the defaults via the @property
         self.backup_type    = self.kwargs.get("TYPE",          None) 
         self.level          = self.kwargs.get("LEVEL",         None) 

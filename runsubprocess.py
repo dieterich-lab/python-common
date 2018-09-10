@@ -74,14 +74,26 @@ def RunSubprocess(command, *args, **kwargs):
         -rwxrwxrwx   1 mikes  staff   2469 May 16 15:37 file1.py
 
     """
-    output  = str(kwargs.get('output', "str"))
-    verbose = True if kwargs.get('verbose', False) else False
-    shell   = True if kwargs.get('shell', False) else False
-    ignore = True if kwargs.get('ignore', False) else False
+#     print("args:", args) #333
+#     print("kwargs:", kwargs) #333
+    output   = str(kwargs.get('output', "str"))
+    verbose  = kwargs.get('verbose', False)
+    shell    = kwargs.get('shell', False)
+    ignore   = kwargs.get('ignore',   False)
+    sanitize = kwargs.get('sanitize', True) 
 
-    if (not ignore) and (not checks.checkSanitized(command)):
-        err = ''.join(["RunSubprocess: The command list '", str(command), "' does not pass a sanitization check. !!MAY HAVE DANGEROUS CONTENT!! ABORTING."])
-        raise ValueError(err)
+    #===========================================================================
+    # print("output   = ", output) #3333
+    # print("verbose  = ", verbose) #3333
+    # print("shell    = ", shell) #3333
+    # print("ignore   = ", ignore) #3333
+    # print("sanitize = ", sanitize) #3333 
+    #===========================================================================
+
+    if sanitize:
+        if (not ignore) and (not checks.checkSanitized(command)):
+            err = ''.join(["RunSubprocess: The command list '", str(command), "' does not pass a sanitization check. !!MAY HAVE DANGEROUS CONTENT!! ABORTING."])
+            raise ValueError(err)
 
     result = ""
     
